@@ -3,7 +3,7 @@ package servicios;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import javax.swing.JOptionPane;
+
 
 /**
  *
@@ -13,15 +13,13 @@ public class configuracionSoftware {
     Conexion cc = new Conexion();
     Connection cn = cc.conexion();
     private String id_programa;
-    private String punto;
-    private String direccion;
-    private String programa;
+    private String punto;   
+    private int opcion;
 
-    public configuracionSoftware(String id_programa, String punto, String direccion, String programa) {
+    public configuracionSoftware(String id_programa, String punto, int opcion) {
         this.id_programa = id_programa;
-        this.punto = punto;
-        this.direccion = direccion;
-        this.programa = programa;
+        this.punto = punto;  
+        this.opcion = opcion;
     }
 
     public String getId_programa() {
@@ -39,31 +37,29 @@ public class configuracionSoftware {
     public void setPunto(String punto) {
         this.punto = punto;
     }
+  
 
-    public String getDireccion() {
-        return direccion;
+    public int getOpcion() {
+        return opcion;
     }
 
-    public void setDireccion(String direccion) {
-        this.direccion = direccion;
-    }
-
-    public String getPrograma() {
-        return programa;
-    }
-
-    public void setPrograma(String programa) {
-        this.programa = programa;
+    public void setOpcion(int opcion) {
+        this.opcion = opcion;
     }
     
-    public boolean addConfig() throws SQLException {
-        String sql = "INSERT INTO config_program (id_software, punto, direccion, programa) "
-                + " VALUES (?, ?, ?, ?)";
+    public boolean addConfig() {
+        try {
+            String sql = "INSERT INTO config_software (id_software, tipo_atencion, modelo) "
+                + " VALUES (?, ?, ?)";
         PreparedStatement guardarStmt = cn.prepareStatement(sql);
         guardarStmt.setString(1, getId_programa());
         guardarStmt.setString(2, getPunto());
-        guardarStmt.setString(3, getDireccion());
-        guardarStmt.setString(4, getPrograma());
-        return guardarStmt.execute();
+        guardarStmt.setInt(3, getOpcion());
+        guardarStmt.execute();
+        return true;
+        } catch (SQLException | NumberFormatException e) {
+            System.out.println("error: "+e);
+            return false;
+        }
     }
 }

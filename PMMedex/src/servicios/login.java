@@ -9,6 +9,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  *
@@ -18,11 +20,20 @@ public class login {
 
     Conexion cc = new Conexion();
     Connection cn = cc.conexion();
-    String user, password;
+    private String user;
+    private String password;
+    private String nombre;
+    private ArrayList<String> permisos;
+    ArrayList<String> tmp = new ArrayList<>();
 
     public login() {
+   
     }
 
+    public login(ArrayList<String> permisos) {
+        this.permisos = permisos;
+    }
+    
     public String getUser() {
         return user;
     }
@@ -39,14 +50,46 @@ public class login {
         this.password = password;
     }
 
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public ArrayList<String> getPermisos() {
+        return permisos;
+    }
+
+    
+    public void limpiarPermisos(){
+      this.permisos.clear();
+    }
+    
+    public void setPermisos(ArrayList<String> permisos) {
+        this.permisos = permisos;
+    }
+
     public boolean verificarUser(String user, String password) throws SQLException {
         String sqlPuesto = "SELECT * FROM usuarios WHERE user = '" + user + "' AND password = '" + password + "'";
         PreparedStatement stm = cn.prepareStatement(sqlPuesto);
         ResultSet rs = stm.executeQuery();
         if (rs != null && rs.next()) {
-//            System.out.println(rs.getString("user")+" "+rs.getString("password")); 
             setUser(rs.getString("user"));
             setPassword(rs.getString("password"));
+            setNombre(rs.getString("nombre"));
+            int id_user = rs.getInt("id_user");
+            String sqlPermisos = "SELECT * FROM usuarios_permisos WHERE id_user = " + id_user + "";
+            PreparedStatement stmp = cn.prepareStatement(sqlPermisos);
+            ResultSet rsp = stmp.executeQuery();
+            while (rsp.next()) {
+                String permiso = Integer.toString(rsp.getInt("id_permiso"));
+                tmp.add(permiso);
+            }
+            setPermisos(tmp);   
+            
+
             return true;
         }
         return false;

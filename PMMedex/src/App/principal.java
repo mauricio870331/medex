@@ -23,22 +23,42 @@ import com.digitalpersona.onetouch.processing.DPFPEnrollment;
 import com.digitalpersona.onetouch.processing.DPFPFeatureExtraction;
 import com.digitalpersona.onetouch.processing.DPFPImageQualityException;
 import com.digitalpersona.onetouch.verification.DPFPVerification;
+import com.digitalpersona.onetouch.verification.DPFPVerificationResult;
+import java.awt.HeadlessException;
 import java.awt.Image;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.awt.event.ItemEvent;
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import servicios.Conexion;
+import servicios.ControlPatients;
+import servicios.Encriptar;
 import servicios.Escribir;
+import servicios.ExportExcel;
 import servicios.Leer;
+import servicios.ModeloExcel;
+import servicios.Patietns;
+import servicios.configUsersSystem;
 import servicios.configuracionSoftware;
 import servicios.login;
 
@@ -48,28 +68,34 @@ import servicios.login;
  */
 public final class principal extends javax.swing.JFrame {
 
+    Date m = new Date();//para capturar la fecha actual
     Conexion cc = new Conexion();
     Connection cn = cc.conexion();
-
+    ArrayList<String> permisos = new ArrayList<>();
+    ArrayList<String> tmp = new ArrayList<>();
     public ResultSet rs = null;
     public String sql = null;
     public Statement st = null;
+    private final JFileChooser FileChooser = new JFileChooser();
+    String OpcPatien;
+    String OpcRoot;
+    File archivo;
+    login lg = new login();
+
     //Inicio variables para el lector     
     private final DPFPCapture Lector = DPFPGlobal.getCaptureFactory().createCapture();
-    private DPFPEnrollment Reclutador = DPFPGlobal.getEnrollmentFactory().createEnrollment();
-    private DPFPVerification Verificador = DPFPGlobal.getVerificationFactory().createVerification();
+    private final DPFPEnrollment Reclutador = DPFPGlobal.getEnrollmentFactory().createEnrollment();
+    private final DPFPVerification Verificador = DPFPGlobal.getVerificationFactory().createVerification();
     private DPFPTemplate template;
     public static String TEMPLATE_PROPERTY = "template";
+    int countAction = 0;
 
-    public principal() {
+    public principal() throws SQLException {
         initComponents();
-        this.setSize(850, 500);
+        this.setSize(868, 553);
         this.setLocationRelativeTo(null);
-        ocultarOpcIndices();
-        ocultarPnConfig();
-        ocultarPnAdministrar();
-        ocultarPnAdmin();
-        ocultarPnEnroll();
+        setIconImage(new ImageIcon(getClass().getResource("/icon/favicon.png")).getImage());
+        hideAllComponent();
     }
 
     /**
@@ -81,20 +107,49 @@ public final class principal extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        HuellaDedos = new javax.swing.ButtonGroup();
+        popupAddFingerPatient = new javax.swing.JPopupMenu();
+        addFinger = new javax.swing.JMenuItem();
+        updatePatient = new javax.swing.JMenuItem();
+        deletePatient = new javax.swing.JMenuItem();
+        printFinger = new javax.swing.JMenuItem();
+        groupModel = new javax.swing.ButtonGroup();
+        popupAdministrator = new javax.swing.JPopupMenu();
+        btnUpdateAdministrator = new javax.swing.JMenuItem();
+        deleteAdministrator = new javax.swing.JMenuItem();
+        groupAdmOrRoot = new javax.swing.ButtonGroup();
+        groupm = new javax.swing.ButtonGroup();
         pnAdministrar = new javax.swing.JPanel();
-        btnCreateUsers1 = new javax.swing.JLabel();
-        btnCreateUsers = new javax.swing.JLabel();
-        btnKeys = new javax.swing.JLabel();
+        pnListUsersRoot = new javax.swing.JPanel();
+        jScrollPane6 = new javax.swing.JScrollPane();
+        tbUsersRoot = new javax.swing.JTable();
+        jPanel6 = new javax.swing.JPanel();
+        txtFindUsersRoot = new javax.swing.JTextField();
+        btnFindUsersRoot = new javax.swing.JButton();
+        pnAddUser = new javax.swing.JPanel();
+        jLabel11 = new javax.swing.JLabel();
+        jLabel12 = new javax.swing.JLabel();
+        btnGuardarUserCreated = new javax.swing.JButton();
+        btnCancelarUserCreated = new javax.swing.JButton();
+        txtUserSystem = new javax.swing.JTextField();
+        txtNombreUserSystem = new javax.swing.JTextField();
+        txtPassUserSystem = new javax.swing.JPasswordField();
+        jLabel13 = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
+        chkCrear = new javax.swing.JCheckBox();
+        chkListar = new javax.swing.JCheckBox();
+        chkEliminar = new javax.swing.JCheckBox();
+        chkAdmin = new javax.swing.JCheckBox();
+        jLabel19 = new javax.swing.JLabel();
+        txtDocumentCreatedUser = new javax.swing.JTextField();
+        pnConfigSoftware = new javax.swing.JPanel();
         jLabel7 = new javax.swing.JLabel();
-        txtSede = new javax.swing.JTextField();
-        jLabel8 = new javax.swing.JLabel();
-        txtDir = new javax.swing.JTextField();
-        jLabel6 = new javax.swing.JLabel();
-        cboPrograma = new javax.swing.JComboBox();
+        cboTipoAtencion = new javax.swing.JComboBox();
         btnGuardarConfig = new javax.swing.JButton();
         btnCancelarConfig = new javax.swing.JButton();
+        opcModel1 = new javax.swing.JRadioButton();
+        opcModel2 = new javax.swing.JRadioButton();
+        pnLogoSU = new javax.swing.JPanel();
+        lblLogoSu = new javax.swing.JLabel();
         pnConfig = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
@@ -104,119 +159,379 @@ public final class principal extends javax.swing.JFrame {
         btnCancelar = new javax.swing.JButton();
         txtpassword = new javax.swing.JPasswordField();
         pnAdmin = new javax.swing.JPanel();
-        pnContentEnroll = new javax.swing.JPanel();
-        lblImagenHuella = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        txtArea = new javax.swing.JTextArea();
-        lblEstadohuellas = new javax.swing.JLabel();
-        opcIndice2 = new javax.swing.JRadioButton();
-        opcIndice = new javax.swing.JRadioButton();
+        ProgresImport = new javax.swing.JProgressBar();
+        pnListControl = new javax.swing.JPanel();
+        opcm1 = new javax.swing.JRadioButton();
+        opcm2 = new javax.swing.JRadioButton();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        tbControlPatienst = new javax.swing.JTable();
+        jPanel7 = new javax.swing.JPanel();
+        txtFindControl = new javax.swing.JTextField();
+        btntxtFindControl = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
+        pnListPatientImport = new javax.swing.JPanel();
+        jScrollPane5 = new javax.swing.JScrollPane();
+        tbPatientsImport = new javax.swing.JTable();
+        jButton2 = new javax.swing.JButton();
+        jButton3 = new javax.swing.JButton();
+        pnListPatient = new javax.swing.JPanel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        tbPatients = new javax.swing.JTable();
+        jPanel5 = new javax.swing.JPanel();
+        txtFindPatient = new javax.swing.JTextField();
+        btnFindPatient = new javax.swing.JButton();
+        pnAddPatient = new javax.swing.JPanel();
+        jLabel14 = new javax.swing.JLabel();
+        jLabel15 = new javax.swing.JLabel();
+        btnAddPatient = new javax.swing.JButton();
+        btnCancelPatient = new javax.swing.JButton();
+        txtNomPattient = new javax.swing.JTextField();
+        txtIdPatient = new javax.swing.JTextField();
+        jLabel16 = new javax.swing.JLabel();
+        jLabel17 = new javax.swing.JLabel();
+        cboTipoIdPatient = new javax.swing.JComboBox();
+        txtApePat = new javax.swing.JTextField();
+        lblIdPt = new javax.swing.JLabel();
+        pnLogoUsers = new javax.swing.JPanel();
+        lblLogoADMusers = new javax.swing.JLabel();
+        pnLogoPatients = new javax.swing.JPanel();
+        lblLogoADM = new javax.swing.JLabel();
+        pnVerificarPatients = new javax.swing.JPanel();
+        lblDocument2 = new javax.swing.JLabel();
+        txtVerifyDocument = new javax.swing.JTextField();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        txtArea1 = new javax.swing.JTextArea();
+        pnHuellas1 = new javax.swing.JPanel();
+        lblImagenHuella1 = new javax.swing.JLabel();
+        lblNotfound = new javax.swing.JLabel();
+        jPanel3 = new javax.swing.JPanel();
+        lblDocument = new javax.swing.JLabel();
+        lblNombres = new javax.swing.JLabel();
+        lblApellidos = new javax.swing.JLabel();
+        lblDocument1 = new javax.swing.JLabel();
+        lblNombres1 = new javax.swing.JLabel();
+        lblApellidos1 = new javax.swing.JLabel();
+        lblInfoPatient = new javax.swing.JLabel();
+        pnHome = new javax.swing.JPanel();
+        lblClose = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
         jPlogo = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        lblUser1 = new javax.swing.JLabel();
         lblUser = new javax.swing.JLabel();
-        jpMenu = new javax.swing.JPanel();
-        jLabel2 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
-        jLabel3 = new javax.swing.JLabel();
+        lblLog = new javax.swing.JLabel();
+        lblIdAdministrator = new javax.swing.JLabel();
+        opcRoot = new javax.swing.JRadioButton();
+        opcAdmin = new javax.swing.JRadioButton();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        btnFile = new javax.swing.JMenu();
+        btnConfig = new javax.swing.JMenuItem();
+        btnSalir = new javax.swing.JMenuItem();
+        btnVerificarPatient = new javax.swing.JMenuItem();
+        btnUsers = new javax.swing.JMenu();
+        btnImportPatient = new javax.swing.JMenuItem();
+        btnCrearPacientes = new javax.swing.JMenuItem();
+        btnListPatients = new javax.swing.JMenuItem();
+        btnListControl = new javax.swing.JMenuItem();
+        btnRoot = new javax.swing.JMenu();
+        btnKeys = new javax.swing.JMenuItem();
+        btnCreateUsersSystem = new javax.swing.JMenuItem();
+        btnConfigSoftware = new javax.swing.JMenuItem();
+        btnListarRoot = new javax.swing.JMenuItem();
+        btnAbout = new javax.swing.JMenu();
+        btnThePrograming = new javax.swing.JMenuItem();
+
+        addFinger.setText("Asociar Huellas");
+        addFinger.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addFingerActionPerformed(evt);
+            }
+        });
+        popupAddFingerPatient.add(addFinger);
+
+        updatePatient.setText("Actualizar");
+        updatePatient.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                updatePatientActionPerformed(evt);
+            }
+        });
+        popupAddFingerPatient.add(updatePatient);
+
+        deletePatient.setText("Eliminar");
+        deletePatient.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deletePatientActionPerformed(evt);
+            }
+        });
+        popupAddFingerPatient.add(deletePatient);
+
+        printFinger.setText("Imprimir Soporte");
+        printFinger.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                printFingerActionPerformed(evt);
+            }
+        });
+        popupAddFingerPatient.add(printFinger);
+
+        btnUpdateAdministrator.setText("Actualizar");
+        btnUpdateAdministrator.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateAdministratorActionPerformed(evt);
+            }
+        });
+        popupAdministrator.add(btnUpdateAdministrator);
+
+        deleteAdministrator.setText("Eliminar");
+        deleteAdministrator.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteAdministratorActionPerformed(evt);
+            }
+        });
+        popupAdministrator.add(deleteAdministrator);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("PM-MEDEX");
+        setBackground(new java.awt.Color(255, 255, 255));
+        setFont(new java.awt.Font("Aharoni", 1, 12)); // NOI18N
         setResizable(false);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
+        pnAdministrar.setBackground(new java.awt.Color(255, 255, 255));
         pnAdministrar.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         pnAdministrar.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        btnCreateUsers1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
-        btnCreateUsers1.setForeground(new java.awt.Color(33, 66, 149));
-        btnCreateUsers1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/software.png"))); // NOI18N
-        btnCreateUsers1.setText("Configurar Software");
-        btnCreateUsers1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                btnCreateUsers1MouseClicked(evt);
-            }
-        });
-        pnAdministrar.add(btnCreateUsers1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 70, 140, -1));
+        pnListUsersRoot.setBackground(new java.awt.Color(255, 255, 255));
+        pnListUsersRoot.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Listado de Administradores", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 12), new java.awt.Color(33, 66, 149))); // NOI18N
+        pnListUsersRoot.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        btnCreateUsers.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
-        btnCreateUsers.setForeground(new java.awt.Color(33, 66, 149));
-        btnCreateUsers.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/addUser.png"))); // NOI18N
-        btnCreateUsers.setText("Crear Usuarios");
-        btnCreateUsers.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                btnCreateUsersMouseClicked(evt);
-            }
-        });
-        pnAdministrar.add(btnCreateUsers, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 40, 140, -1));
+        tbUsersRoot.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {},
+                {},
+                {},
+                {}
+            },
+            new String [] {
 
-        btnKeys.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
-        btnKeys.setForeground(new java.awt.Color(33, 66, 149));
-        btnKeys.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/keys.png"))); // NOI18N
-        btnKeys.setText("Generar Id Software");
-        btnKeys.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                btnKeysMouseClicked(evt);
+            }
+        ));
+        tbUsersRoot.setComponentPopupMenu(popupAdministrator);
+        jScrollPane6.setViewportView(tbUsersRoot);
+
+        pnListUsersRoot.add(jScrollPane6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 578, 150));
+
+        jPanel6.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Criterios de busqueda: Nombre ó Usuario", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 12), new java.awt.Color(33, 66, 149))); // NOI18N
+        jPanel6.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        txtFindUsersRoot.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        txtFindUsersRoot.setForeground(new java.awt.Color(33, 66, 149));
+        jPanel6.add(txtFindUsersRoot, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 300, 23));
+
+        btnFindUsersRoot.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        btnFindUsersRoot.setForeground(new java.awt.Color(33, 66, 149));
+        btnFindUsersRoot.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/find.png"))); // NOI18N
+        btnFindUsersRoot.setText("Buscar");
+        btnFindUsersRoot.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnFindUsersRootActionPerformed(evt);
             }
         });
-        pnAdministrar.add(btnKeys, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 140, -1));
+        jPanel6.add(btnFindUsersRoot, new org.netbeans.lib.awtextra.AbsoluteConstraints(330, 30, -1, 23));
+
+        pnListUsersRoot.add(jPanel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 220, 578, 70));
+
+        pnAdministrar.add(pnListUsersRoot, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 40, 600, 320));
+
+        pnAddUser.setBackground(new java.awt.Color(255, 255, 255));
+        pnAddUser.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Crear Usuarios", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 12), new java.awt.Color(33, 66, 149))); // NOI18N
+        pnAddUser.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        jLabel11.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel11.setForeground(new java.awt.Color(33, 66, 149));
+        jLabel11.setText("Nombre Completo:");
+        jLabel11.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel11.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel11MouseClicked(evt);
+            }
+        });
+        pnAddUser.add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 72, 140, -1));
+
+        jLabel12.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel12.setForeground(new java.awt.Color(33, 66, 149));
+        jLabel12.setText("Contraseña:");
+        jLabel12.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel12.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel12MouseClicked(evt);
+            }
+        });
+        pnAddUser.add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 140, 100, -1));
+
+        btnGuardarUserCreated.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        btnGuardarUserCreated.setForeground(new java.awt.Color(33, 66, 149));
+        btnGuardarUserCreated.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/save.png"))); // NOI18N
+        btnGuardarUserCreated.setText("Guardar");
+        btnGuardarUserCreated.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnGuardarUserCreatedActionPerformed(evt);
+            }
+        });
+        pnAddUser.add(btnGuardarUserCreated, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 270, -1, -1));
+
+        btnCancelarUserCreated.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        btnCancelarUserCreated.setForeground(new java.awt.Color(33, 66, 149));
+        btnCancelarUserCreated.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/cancel.png"))); // NOI18N
+        btnCancelarUserCreated.setText("Cancelar");
+        btnCancelarUserCreated.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCancelarUserCreatedActionPerformed(evt);
+            }
+        });
+        pnAddUser.add(btnCancelarUserCreated, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 270, -1, -1));
+
+        txtUserSystem.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        txtUserSystem.setForeground(new java.awt.Color(33, 66, 149));
+        pnAddUser.add(txtUserSystem, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 105, 170, -1));
+
+        txtNombreUserSystem.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        txtNombreUserSystem.setForeground(new java.awt.Color(33, 66, 149));
+        pnAddUser.add(txtNombreUserSystem, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 72, 170, -1));
+
+        txtPassUserSystem.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        txtPassUserSystem.setForeground(new java.awt.Color(33, 66, 149));
+        pnAddUser.add(txtPassUserSystem, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 140, 170, -1));
+
+        jLabel13.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel13.setForeground(new java.awt.Color(33, 66, 149));
+        jLabel13.setText("Usu@rio:");
+        jLabel13.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel13.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel13MouseClicked(evt);
+            }
+        });
+        pnAddUser.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 105, 80, -1));
 
         jPanel2.setBackground(new java.awt.Color(255, 255, 255));
-        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Configurar", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 12), new java.awt.Color(33, 66, 149))); // NOI18N
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Permisos", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 12), new java.awt.Color(33, 66, 149))); // NOI18N
         jPanel2.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        chkCrear.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        chkCrear.setForeground(new java.awt.Color(33, 66, 149));
+        chkCrear.setText("Crear");
+        chkCrear.setOpaque(false);
+        jPanel2.add(chkCrear, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 25, -1, -1));
+
+        chkListar.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        chkListar.setForeground(new java.awt.Color(33, 66, 149));
+        chkListar.setText("Listar");
+        chkListar.setOpaque(false);
+        jPanel2.add(chkListar, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 25, -1, -1));
+
+        chkEliminar.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        chkEliminar.setForeground(new java.awt.Color(33, 66, 149));
+        chkEliminar.setText("Eliminar");
+        chkEliminar.setOpaque(false);
+        jPanel2.add(chkEliminar, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 25, -1, -1));
+
+        chkAdmin.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        chkAdmin.setForeground(new java.awt.Color(33, 66, 149));
+        chkAdmin.setText("Admin");
+        chkAdmin.setOpaque(false);
+        jPanel2.add(chkAdmin, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 25, -1, -1));
+
+        pnAddUser.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 180, 320, 70));
+
+        jLabel19.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel19.setForeground(new java.awt.Color(33, 66, 149));
+        jLabel19.setText("Documento:");
+        jLabel19.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel19.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel19MouseClicked(evt);
+            }
+        });
+        pnAddUser.add(jLabel19, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 37, 140, -1));
+
+        txtDocumentCreatedUser.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        txtDocumentCreatedUser.setForeground(new java.awt.Color(33, 66, 149));
+        pnAddUser.add(txtDocumentCreatedUser, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 37, 170, -1));
+
+        pnAdministrar.add(pnAddUser, new org.netbeans.lib.awtextra.AbsoluteConstraints(218, 40, 430, 320));
+
+        pnConfigSoftware.setBackground(new java.awt.Color(255, 255, 255));
+        pnConfigSoftware.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Configurar Software", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 12), new java.awt.Color(33, 66, 149))); // NOI18N
+        pnConfigSoftware.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel7.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel7.setForeground(new java.awt.Color(33, 66, 149));
-        jLabel7.setText("Sede:");
+        jLabel7.setText("Tipo Atención:");
         jLabel7.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         jLabel7.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jLabel7MouseClicked(evt);
             }
         });
-        jPanel2.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 80, 60, -1));
-        jPanel2.add(txtSede, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 80, 190, -1));
+        pnConfigSoftware.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(25, 120, 140, -1));
 
-        jLabel8.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        jLabel8.setForeground(new java.awt.Color(33, 66, 149));
-        jLabel8.setText("Dirección:");
-        jLabel8.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        jLabel8.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jLabel8MouseClicked(evt);
-            }
-        });
-        jPanel2.add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 120, 80, -1));
-        jPanel2.add(txtDir, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 120, 190, -1));
+        cboTipoAtencion.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        cboTipoAtencion.setForeground(new java.awt.Color(33, 66, 149));
+        pnConfigSoftware.add(cboTipoAtencion, new org.netbeans.lib.awtextra.AbsoluteConstraints(165, 120, 180, -1));
 
-        jLabel6.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        jLabel6.setForeground(new java.awt.Color(33, 66, 149));
-        jLabel6.setText("Programa:");
-        jLabel6.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        jLabel6.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jLabel6MouseClicked(evt);
-            }
-        });
-        jPanel2.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 170, 80, -1));
-
-        cboPrograma.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Seleccione", "Aplicacion", "Dispensación" }));
-        jPanel2.add(cboPrograma, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 170, 190, -1));
-
+        btnGuardarConfig.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        btnGuardarConfig.setForeground(new java.awt.Color(33, 66, 149));
+        btnGuardarConfig.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/save.png"))); // NOI18N
         btnGuardarConfig.setText("Guardar");
         btnGuardarConfig.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnGuardarConfigActionPerformed(evt);
             }
         });
-        jPanel2.add(btnGuardarConfig, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 230, -1, -1));
+        pnConfigSoftware.add(btnGuardarConfig, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 190, -1, -1));
 
+        btnCancelarConfig.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        btnCancelarConfig.setForeground(new java.awt.Color(33, 66, 149));
+        btnCancelarConfig.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/cancel.png"))); // NOI18N
         btnCancelarConfig.setText("Cancelar");
-        jPanel2.add(btnCancelarConfig, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 230, -1, -1));
+        btnCancelarConfig.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCancelarConfigActionPerformed(evt);
+            }
+        });
+        pnConfigSoftware.add(btnCancelarConfig, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 190, -1, -1));
 
-        pnAdministrar.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 40, 350, 300));
+        groupModel.add(opcModel1);
+        opcModel1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        opcModel1.setForeground(new java.awt.Color(33, 66, 149));
+        opcModel1.setSelected(true);
+        opcModel1.setText("Modelo 1");
+        opcModel1.setActionCommand("1");
+        opcModel1.setOpaque(false);
+        pnConfigSoftware.add(opcModel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 70, -1, -1));
 
-        getContentPane().add(pnAdministrar, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 60, 710, 440));
+        groupModel.add(opcModel2);
+        opcModel2.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        opcModel2.setForeground(new java.awt.Color(33, 66, 149));
+        opcModel2.setText("Modelo 2");
+        opcModel2.setActionCommand("2");
+        opcModel2.setOpaque(false);
+        pnConfigSoftware.add(opcModel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 70, -1, -1));
 
+        pnAdministrar.add(pnConfigSoftware, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 70, 370, 250));
+
+        pnLogoSU.setBackground(new java.awt.Color(255, 255, 255));
+        pnLogoSU.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        lblLogoSu.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblLogoSu.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/logoSU.png"))); // NOI18N
+        pnLogoSU.add(lblLogoSu, new org.netbeans.lib.awtextra.AbsoluteConstraints(4, 4, 830, 410));
+
+        pnAdministrar.add(pnLogoSU, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 840, 420));
+
+        getContentPane().add(pnAdministrar, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 60, 860, 440));
+
+        pnConfig.setBackground(new java.awt.Color(255, 255, 255));
         pnConfig.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         pnConfig.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -243,63 +558,416 @@ public final class principal extends javax.swing.JFrame {
 
         btnIngresar.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         btnIngresar.setForeground(new java.awt.Color(33, 66, 149));
+        btnIngresar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/sign_up.png"))); // NOI18N
         btnIngresar.setText("Ingresar");
+        btnIngresar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnIngresar.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         btnIngresar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnIngresarActionPerformed(evt);
             }
         });
-        jPanel1.add(btnIngresar, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 180, -1, -1));
+        jPanel1.add(btnIngresar, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 180, 110, 24));
 
         btnCancelar.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         btnCancelar.setForeground(new java.awt.Color(33, 66, 149));
+        btnCancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/cancel.png"))); // NOI18N
         btnCancelar.setText("Cancelar");
-        jPanel1.add(btnCancelar, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 180, -1, -1));
-        jPanel1.add(txtpassword, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 110, 150, -1));
-
-        pnConfig.add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 50, 360, 250));
-
-        getContentPane().add(pnConfig, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 60, 710, 440));
-
-        pnAdmin.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        pnAdmin.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-        getContentPane().add(pnAdmin, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 60, 710, 440));
-
-        pnContentEnroll.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        pnContentEnroll.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        lblImagenHuella.setBackground(new java.awt.Color(255, 255, 255));
-        lblImagenHuella.setOpaque(true);
-        pnContentEnroll.add(lblImagenHuella, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 80, 160, 180));
-
-        txtArea.setColumns(20);
-        txtArea.setRows(5);
-        jScrollPane1.setViewportView(txtArea);
-
-        pnContentEnroll.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 290, 320, 70));
-
-        lblEstadohuellas.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblEstadohuellas.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-        pnContentEnroll.add(lblEstadohuellas, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 360, 320, 20));
-
-        HuellaDedos.add(opcIndice2);
-        opcIndice2.setActionCommand("2");
-        opcIndice2.setEnabled(false);
-        opcIndice2.setOpaque(false);
-        pnContentEnroll.add(opcIndice2, new org.netbeans.lib.awtextra.AbsoluteConstraints(420, 50, -1, 20));
-
-        HuellaDedos.add(opcIndice);
-        opcIndice.setActionCommand("1");
-        opcIndice.setEnabled(false);
-        opcIndice.setOpaque(false);
-        opcIndice.addActionListener(new java.awt.event.ActionListener() {
+        btnCancelar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnCancelar.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        btnCancelar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                opcIndiceActionPerformed(evt);
+                btnCancelarActionPerformed(evt);
             }
         });
-        pnContentEnroll.add(opcIndice, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 50, -1, -1));
+        jPanel1.add(btnCancelar, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 180, -1, 24));
+        jPanel1.add(txtpassword, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 110, 150, -1));
 
-        getContentPane().add(pnContentEnroll, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 60, 710, 440));
+        pnConfig.add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 70, 360, 250));
+
+        getContentPane().add(pnConfig, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 60, 860, 440));
+
+        pnAdmin.setBackground(new java.awt.Color(255, 255, 255));
+        pnAdmin.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        pnAdmin.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        ProgresImport.setForeground(new java.awt.Color(33, 66, 149));
+        ProgresImport.setString("");
+        ProgresImport.setStringPainted(true);
+        pnAdmin.add(ProgresImport, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 415, 853, 20));
+
+        pnListControl.setBackground(new java.awt.Color(255, 255, 255));
+        pnListControl.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Listado de Control de Pacientes", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 12), new java.awt.Color(33, 66, 149))); // NOI18N
+        pnListControl.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        groupm.add(opcm1);
+        opcm1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        opcm1.setForeground(new java.awt.Color(33, 66, 149));
+        opcm1.setSelected(true);
+        opcm1.setText("Modelo 1");
+        opcm1.setActionCommand("1");
+        opcm1.setOpaque(false);
+        pnListControl.add(opcm1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 15, -1, -1));
+
+        groupm.add(opcm2);
+        opcm2.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        opcm2.setForeground(new java.awt.Color(33, 66, 149));
+        opcm2.setText("Modelo 2");
+        opcm2.setActionCommand("2");
+        opcm2.setOpaque(false);
+        pnListControl.add(opcm2, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 15, -1, -1));
+
+        tbControlPatienst.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {},
+                {},
+                {},
+                {}
+            },
+            new String [] {
+
+            }
+        ));
+        jScrollPane4.setViewportView(tbControlPatienst);
+
+        pnListControl.add(jScrollPane4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 45, 680, 170));
+
+        jPanel7.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Criterios de busqueda: Documento, Nombre ó Apellido", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 12), new java.awt.Color(33, 66, 149))); // NOI18N
+        jPanel7.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        txtFindControl.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        txtFindControl.setForeground(new java.awt.Color(33, 66, 149));
+        jPanel7.add(txtFindControl, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 300, 23));
+
+        btntxtFindControl.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        btntxtFindControl.setForeground(new java.awt.Color(33, 66, 149));
+        btntxtFindControl.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/find.png"))); // NOI18N
+        btntxtFindControl.setText("Buscar");
+        btntxtFindControl.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btntxtFindControlActionPerformed(evt);
+            }
+        });
+        jPanel7.add(btntxtFindControl, new org.netbeans.lib.awtextra.AbsoluteConstraints(360, 30, -1, 25));
+
+        jButton1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jButton1.setForeground(new java.awt.Color(33, 66, 149));
+        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/export.png"))); // NOI18N
+        jButton1.setText("Exportar");
+        jButton1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jButton1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jButton1.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+        jPanel7.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 30, 110, 25));
+
+        pnListControl.add(jPanel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 260, 680, 70));
+
+        pnAdmin.add(pnListControl, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 20, 700, 350));
+
+        pnListPatientImport.setBackground(new java.awt.Color(255, 255, 255));
+        pnListPatientImport.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Listado de Pacientes En archivo", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 12), new java.awt.Color(33, 66, 149))); // NOI18N
+        pnListPatientImport.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        tbPatientsImport.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jScrollPane5.setViewportView(tbPatientsImport);
+        if (tbPatientsImport.getColumnModel().getColumnCount() > 0) {
+            tbPatientsImport.getColumnModel().getColumn(0).setResizable(false);
+            tbPatientsImport.getColumnModel().getColumn(0).setHeaderValue("Title 1");
+            tbPatientsImport.getColumnModel().getColumn(1).setResizable(false);
+            tbPatientsImport.getColumnModel().getColumn(1).setHeaderValue("Title 2");
+            tbPatientsImport.getColumnModel().getColumn(2).setResizable(false);
+            tbPatientsImport.getColumnModel().getColumn(2).setHeaderValue("Title 3");
+            tbPatientsImport.getColumnModel().getColumn(3).setResizable(false);
+            tbPatientsImport.getColumnModel().getColumn(3).setHeaderValue("Title 4");
+        }
+
+        pnListPatientImport.add(jScrollPane5, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 540, 150));
+
+        jButton2.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jButton2.setForeground(new java.awt.Color(33, 66, 149));
+        jButton2.setText("Guardar");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+        pnListPatientImport.add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 220, -1, -1));
+
+        jButton3.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jButton3.setForeground(new java.awt.Color(33, 66, 149));
+        jButton3.setText("Cancelar");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+        pnListPatientImport.add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 220, -1, -1));
+
+        pnAdmin.add(pnListPatientImport, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 40, 560, 320));
+
+        pnListPatient.setBackground(new java.awt.Color(255, 255, 255));
+        pnListPatient.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Listado de Pacientes", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 12), new java.awt.Color(33, 66, 149))); // NOI18N
+        pnListPatient.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        tbPatients.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {},
+                {},
+                {},
+                {}
+            },
+            new String [] {
+
+            }
+        ));
+        tbPatients.setComponentPopupMenu(popupAddFingerPatient);
+        jScrollPane2.setViewportView(tbPatients);
+
+        pnListPatient.add(jScrollPane2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, 578, 190));
+
+        jPanel5.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Criterios de busqueda: Documento, Nombre ó Apellido", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 12), new java.awt.Color(33, 66, 149))); // NOI18N
+        jPanel5.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        txtFindPatient.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        txtFindPatient.setForeground(new java.awt.Color(33, 66, 149));
+        jPanel5.add(txtFindPatient, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 300, 23));
+
+        btnFindPatient.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        btnFindPatient.setForeground(new java.awt.Color(33, 66, 149));
+        btnFindPatient.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/find.png"))); // NOI18N
+        btnFindPatient.setText("Buscar");
+        btnFindPatient.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnFindPatientActionPerformed(evt);
+            }
+        });
+        jPanel5.add(btnFindPatient, new org.netbeans.lib.awtextra.AbsoluteConstraints(330, 30, -1, 23));
+
+        pnListPatient.add(jPanel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 250, 578, 80));
+
+        pnAdmin.add(pnListPatient, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 20, 600, 350));
+
+        pnAddPatient.setBackground(new java.awt.Color(255, 255, 255));
+        pnAddPatient.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Crear Pacientes", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 12), new java.awt.Color(33, 66, 149))); // NOI18N
+        pnAddPatient.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        jLabel14.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel14.setForeground(new java.awt.Color(33, 66, 149));
+        jLabel14.setText("No. Documento:");
+        jLabel14.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel14.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel14MouseClicked(evt);
+            }
+        });
+        pnAddPatient.add(jLabel14, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 68, 140, -1));
+
+        jLabel15.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel15.setForeground(new java.awt.Color(33, 66, 149));
+        jLabel15.setText("Apellidos:");
+        jLabel15.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel15.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel15MouseClicked(evt);
+            }
+        });
+        pnAddPatient.add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 130, 100, -1));
+
+        btnAddPatient.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        btnAddPatient.setForeground(new java.awt.Color(33, 66, 149));
+        btnAddPatient.setText("Guardar");
+        btnAddPatient.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddPatientActionPerformed(evt);
+            }
+        });
+        pnAddPatient.add(btnAddPatient, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 180, -1, -1));
+
+        btnCancelPatient.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        btnCancelPatient.setForeground(new java.awt.Color(33, 66, 149));
+        btnCancelPatient.setText("Cancelar");
+        btnCancelPatient.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCancelPatientActionPerformed(evt);
+            }
+        });
+        pnAddPatient.add(btnCancelPatient, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 180, -1, -1));
+        pnAddPatient.add(txtNomPattient, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 100, 170, -1));
+        pnAddPatient.add(txtIdPatient, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 68, 170, -1));
+
+        jLabel16.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel16.setForeground(new java.awt.Color(33, 66, 149));
+        jLabel16.setText("Nombre:");
+        jLabel16.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel16.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel16MouseClicked(evt);
+            }
+        });
+        pnAddPatient.add(jLabel16, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 100, 80, -1));
+
+        jLabel17.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel17.setForeground(new java.awt.Color(33, 66, 149));
+        jLabel17.setText("Tipo Documento:");
+        jLabel17.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel17.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel17MouseClicked(evt);
+            }
+        });
+        pnAddPatient.add(jLabel17, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 33, 140, -1));
+
+        cboTipoIdPatient.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Seleccione", "TI", "CC", "PP" }));
+        pnAddPatient.add(cboTipoIdPatient, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 33, 170, -1));
+        pnAddPatient.add(txtApePat, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 130, 170, -1));
+        pnAddPatient.add(lblIdPt, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 40, 20, 10));
+
+        pnAdmin.add(pnAddPatient, new org.netbeans.lib.awtextra.AbsoluteConstraints(218, 60, 430, 230));
+
+        pnLogoUsers.setBackground(new java.awt.Color(255, 255, 255));
+        pnLogoUsers.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        pnLogoUsers.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        lblLogoADMusers.setBackground(new java.awt.Color(255, 255, 255));
+        lblLogoADMusers.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblLogoADMusers.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/admUsers.png"))); // NOI18N
+        lblLogoADMusers.setOpaque(true);
+        pnLogoUsers.add(lblLogoADMusers, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 849, 430));
+
+        pnAdmin.add(pnLogoUsers, new org.netbeans.lib.awtextra.AbsoluteConstraints(2, 3, 849, 430));
+
+        pnLogoPatients.setBackground(new java.awt.Color(255, 255, 255));
+        pnLogoPatients.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        pnLogoPatients.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        lblLogoADM.setBackground(new java.awt.Color(255, 255, 255));
+        lblLogoADM.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblLogoADM.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/admPatiens.png"))); // NOI18N
+        lblLogoADM.setOpaque(true);
+        pnLogoPatients.add(lblLogoADM, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 849, 430));
+
+        pnAdmin.add(pnLogoPatients, new org.netbeans.lib.awtextra.AbsoluteConstraints(2, 3, 849, 430));
+
+        getContentPane().add(pnAdmin, new org.netbeans.lib.awtextra.AbsoluteConstraints(3, 64, 855, 435));
+
+        pnVerificarPatients.setBackground(new java.awt.Color(255, 255, 255));
+        pnVerificarPatients.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        pnVerificarPatients.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        lblDocument2.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        lblDocument2.setForeground(new java.awt.Color(33, 66, 149));
+        lblDocument2.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        lblDocument2.setText("Documento:");
+        pnVerificarPatients.add(lblDocument2, new org.netbeans.lib.awtextra.AbsoluteConstraints(82, 25, 70, 20));
+
+        txtVerifyDocument.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        txtVerifyDocument.setForeground(new java.awt.Color(33, 66, 149));
+        pnVerificarPatients.add(txtVerifyDocument, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 25, 140, -1));
+
+        txtArea1.setColumns(20);
+        txtArea1.setFont(new java.awt.Font("Arial", 1, 10)); // NOI18N
+        txtArea1.setForeground(new java.awt.Color(33, 66, 149));
+        txtArea1.setRows(5);
+        jScrollPane3.setViewportView(txtArea1);
+
+        pnVerificarPatients.add(jScrollPane3, new org.netbeans.lib.awtextra.AbsoluteConstraints(22, 318, 330, 70));
+
+        pnHuellas1.setBackground(new java.awt.Color(230, 234, 243));
+        pnHuellas1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        pnHuellas1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        lblImagenHuella1.setBackground(new java.awt.Color(255, 255, 255));
+        lblImagenHuella1.setOpaque(true);
+        pnHuellas1.add(lblImagenHuella1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 10, 180, 240));
+
+        pnVerificarPatients.add(pnHuellas1, new org.netbeans.lib.awtextra.AbsoluteConstraints(82, 50, 220, 260));
+
+        lblNotfound.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        lblNotfound.setForeground(new java.awt.Color(33, 66, 149));
+        lblNotfound.setText("El Paciente no esta en la base de datos..");
+        pnVerificarPatients.add(lblNotfound, new org.netbeans.lib.awtextra.AbsoluteConstraints(22, 390, 320, -1));
+
+        jPanel3.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Información del Paciente", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 14), new java.awt.Color(33, 66, 149))); // NOI18N
+        jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        lblDocument.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        lblDocument.setForeground(new java.awt.Color(33, 66, 149));
+        lblDocument.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jPanel3.add(lblDocument, new org.netbeans.lib.awtextra.AbsoluteConstraints(159, 100, 230, 20));
+
+        lblNombres.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        lblNombres.setForeground(new java.awt.Color(33, 66, 149));
+        lblNombres.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jPanel3.add(lblNombres, new org.netbeans.lib.awtextra.AbsoluteConstraints(159, 165, 230, 20));
+
+        lblApellidos.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        lblApellidos.setForeground(new java.awt.Color(33, 66, 149));
+        lblApellidos.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jPanel3.add(lblApellidos, new org.netbeans.lib.awtextra.AbsoluteConstraints(159, 229, 230, 20));
+
+        lblDocument1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        lblDocument1.setForeground(new java.awt.Color(33, 66, 149));
+        lblDocument1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        lblDocument1.setText("Documento:");
+        jPanel3.add(lblDocument1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 100, 140, 20));
+
+        lblNombres1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        lblNombres1.setForeground(new java.awt.Color(33, 66, 149));
+        lblNombres1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        lblNombres1.setText("Nombres:");
+        jPanel3.add(lblNombres1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 165, 140, 20));
+
+        lblApellidos1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        lblApellidos1.setForeground(new java.awt.Color(33, 66, 149));
+        lblApellidos1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        lblApellidos1.setText("Apellidos:");
+        jPanel3.add(lblApellidos1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 229, 140, 20));
+
+        lblInfoPatient.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblInfoPatient.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/infoPatient.png"))); // NOI18N
+        jPanel3.add(lblInfoPatient, new org.netbeans.lib.awtextra.AbsoluteConstraints(9, 20, 400, 310));
+
+        pnVerificarPatients.add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 50, 420, 340));
+
+        getContentPane().add(pnVerificarPatients, new org.netbeans.lib.awtextra.AbsoluteConstraints(3, 60, 857, 440));
+
+        pnHome.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        pnHome.setOpaque(false);
+        pnHome.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        lblClose.setFont(new java.awt.Font("Tahoma", 1, 13)); // NOI18N
+        lblClose.setForeground(new java.awt.Color(33, 66, 149));
+        lblClose.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/close.png"))); // NOI18N
+        lblClose.setText("Cerrar Programa");
+        lblClose.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        lblClose.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lblCloseMouseClicked(evt);
+            }
+        });
+        pnHome.add(lblClose, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 360, 150, -1));
+
+        jLabel3.setBackground(new java.awt.Color(255, 255, 255));
+        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/bigHome.png"))); // NOI18N
+        jLabel3.setOpaque(true);
+        pnHome.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(3, 4, 850, 430));
+
+        getContentPane().add(pnHome, new org.netbeans.lib.awtextra.AbsoluteConstraints(3, 60, 857, 440));
 
         jPlogo.setBackground(new java.awt.Color(255, 255, 255));
         jPlogo.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -307,64 +975,204 @@ public final class principal extends javax.swing.JFrame {
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/medexl.png"))); // NOI18N
-        jPlogo.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 230, 60));
+        jPlogo.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 350, 60));
 
-        lblUser1.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
-        lblUser1.setForeground(new java.awt.Color(33, 66, 149));
-        lblUser1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        lblUser1.setText("Usuario:");
-        jPlogo.add(lblUser1, new org.netbeans.lib.awtextra.AbsoluteConstraints(490, 0, 90, 20));
-
-        lblUser.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        lblUser.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         lblUser.setForeground(new java.awt.Color(33, 66, 149));
         lblUser.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        jPlogo.add(lblUser, new org.netbeans.lib.awtextra.AbsoluteConstraints(600, 0, 250, 20));
+        lblUser.setText("No hay Sesión Activa..!");
+        jPlogo.add(lblUser, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 8, 180, 20));
 
-        getContentPane().add(jPlogo, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 850, 62));
+        lblLog.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblLog.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/lbllog.png"))); // NOI18N
+        jPlogo.add(lblLog, new org.netbeans.lib.awtextra.AbsoluteConstraints(561, 0, 300, 60));
+        jPlogo.add(lblIdAdministrator, new org.netbeans.lib.awtextra.AbsoluteConstraints(380, 20, 40, 20));
 
-        jpMenu.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        jpMenu.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        groupAdmOrRoot.add(opcRoot);
+        opcRoot.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        opcRoot.setForeground(new java.awt.Color(33, 66, 149));
+        opcRoot.setSelected(true);
+        opcRoot.setText("Root");
+        opcRoot.setOpaque(false);
+        jPlogo.add(opcRoot, new org.netbeans.lib.awtextra.AbsoluteConstraints(390, 10, -1, -1));
 
-        jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/home.png"))); // NOI18N
-        jpMenu.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, -1, -1));
+        groupAdmOrRoot.add(opcAdmin);
+        opcAdmin.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        opcAdmin.setForeground(new java.awt.Color(33, 66, 149));
+        opcAdmin.setText("Admin");
+        opcAdmin.setOpaque(false);
+        jPlogo.add(opcAdmin, new org.netbeans.lib.awtextra.AbsoluteConstraints(390, 30, -1, -1));
 
-        jButton1.setText("jButton1");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        getContentPane().add(jPlogo, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 870, 62));
+
+        jMenuBar1.setBackground(new java.awt.Color(255, 255, 255));
+        jMenuBar1.setForeground(new java.awt.Color(33, 66, 149));
+        jMenuBar1.setFont(new java.awt.Font("Arial Black", 1, 12)); // NOI18N
+
+        btnFile.setForeground(new java.awt.Color(33, 66, 149));
+        btnFile.setText("Archivo");
+        btnFile.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                btnFileActionPerformed(evt);
             }
         });
-        jpMenu.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 150, -1, -1));
 
-        jLabel3.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
-        jLabel3.setForeground(new java.awt.Color(33, 66, 149));
-        jLabel3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/config.png"))); // NOI18N
-        jLabel3.setText("Configuracion");
-        jLabel3.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        jLabel3.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jLabel3MouseClicked(evt);
+        btnConfig.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnConfig.setForeground(new java.awt.Color(33, 66, 149));
+        btnConfig.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/config.png"))); // NOI18N
+        btnConfig.setText("Configuración");
+        btnConfig.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnConfigActionPerformed(evt);
             }
         });
-        jpMenu.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, 110, -1));
+        btnFile.add(btnConfig);
 
-        getContentPane().add(jpMenu, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 60, 140, 440));
+        btnSalir.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnSalir.setForeground(new java.awt.Color(33, 66, 149));
+        btnSalir.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/logout.png"))); // NOI18N
+        btnSalir.setText("Cerrar Sesión");
+        btnSalir.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSalirActionPerformed(evt);
+            }
+        });
+        btnFile.add(btnSalir);
+
+        btnVerificarPatient.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnVerificarPatient.setForeground(new java.awt.Color(33, 66, 149));
+        btnVerificarPatient.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/verificar.png"))); // NOI18N
+        btnVerificarPatient.setText("Verificar Pacientes");
+        btnVerificarPatient.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnVerificarPatientActionPerformed(evt);
+            }
+        });
+        btnFile.add(btnVerificarPatient);
+
+        jMenuBar1.add(btnFile);
+
+        btnUsers.setForeground(new java.awt.Color(33, 66, 149));
+        btnUsers.setText("Menu Usuarios");
+        btnUsers.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+
+        btnImportPatient.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnImportPatient.setForeground(new java.awt.Color(33, 66, 149));
+        btnImportPatient.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/export.png"))); // NOI18N
+        btnImportPatient.setText("Importar Pacientes");
+        btnImportPatient.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnImportPatientActionPerformed(evt);
+            }
+        });
+        btnUsers.add(btnImportPatient);
+
+        btnCrearPacientes.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnCrearPacientes.setForeground(new java.awt.Color(33, 66, 149));
+        btnCrearPacientes.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/patient.png"))); // NOI18N
+        btnCrearPacientes.setText("Crear Pacientes");
+        btnCrearPacientes.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCrearPacientesActionPerformed(evt);
+            }
+        });
+        btnUsers.add(btnCrearPacientes);
+
+        btnListPatients.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnListPatients.setForeground(new java.awt.Color(33, 66, 149));
+        btnListPatients.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/listPatients.png"))); // NOI18N
+        btnListPatients.setText("Listar Pacientes");
+        btnListPatients.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnListPatientsActionPerformed(evt);
+            }
+        });
+        btnUsers.add(btnListPatients);
+
+        btnListControl.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnListControl.setForeground(new java.awt.Color(33, 66, 149));
+        btnListControl.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/listControl.png"))); // NOI18N
+        btnListControl.setText("Listado de controles");
+        btnListControl.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnListControlActionPerformed(evt);
+            }
+        });
+        btnUsers.add(btnListControl);
+
+        jMenuBar1.add(btnUsers);
+
+        btnRoot.setForeground(new java.awt.Color(33, 66, 149));
+        btnRoot.setText("Root");
+        btnRoot.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+
+        btnKeys.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnKeys.setForeground(new java.awt.Color(33, 66, 149));
+        btnKeys.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/keys.png"))); // NOI18N
+        btnKeys.setText("Generar Clave de programa");
+        btnKeys.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnKeysActionPerformed(evt);
+            }
+        });
+        btnRoot.add(btnKeys);
+
+        btnCreateUsersSystem.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnCreateUsersSystem.setForeground(new java.awt.Color(33, 66, 149));
+        btnCreateUsersSystem.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/addUser.png"))); // NOI18N
+        btnCreateUsersSystem.setText("Crear Usuarios");
+        btnCreateUsersSystem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCreateUsersSystemActionPerformed(evt);
+            }
+        });
+        btnRoot.add(btnCreateUsersSystem);
+
+        btnConfigSoftware.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnConfigSoftware.setForeground(new java.awt.Color(33, 66, 149));
+        btnConfigSoftware.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/software.png"))); // NOI18N
+        btnConfigSoftware.setText("Configurar Programa");
+        btnConfigSoftware.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnConfigSoftwareActionPerformed(evt);
+            }
+        });
+        btnRoot.add(btnConfigSoftware);
+
+        btnListarRoot.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnListarRoot.setForeground(new java.awt.Color(33, 66, 149));
+        btnListarRoot.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/listAdmT.png"))); // NOI18N
+        btnListarRoot.setText("Listar");
+        btnListarRoot.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnListarRootActionPerformed(evt);
+            }
+        });
+        btnRoot.add(btnListarRoot);
+
+        jMenuBar1.add(btnRoot);
+
+        btnAbout.setForeground(new java.awt.Color(33, 66, 149));
+        btnAbout.setText("Team");
+        btnAbout.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+
+        btnThePrograming.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnThePrograming.setForeground(new java.awt.Color(33, 66, 149));
+        btnThePrograming.setText("Acerca del programador");
+        btnThePrograming.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTheProgramingActionPerformed(evt);
+            }
+        });
+        btnAbout.add(btnThePrograming);
+
+        jMenuBar1.add(btnAbout);
+
+        setJMenuBar(jMenuBar1);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    private void opcIndiceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcIndiceActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_opcIndiceActionPerformed
-
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-
-//         txtArea.setEditable(false);
-//        Iniciar();
-//        start();
-//        EstadoHuellas();
-
-    }//GEN-LAST:event_jButton1ActionPerformed
 
     private void txtUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtUserActionPerformed
         // TODO add your handling code here:
@@ -381,91 +1189,708 @@ public final class principal extends javax.swing.JFrame {
             txtpassword.requestFocus();
         } else {
             try {
-                login lg = new login();
-                if (lg.verificarUser(user, pass)) {
-                    if (lg.getUser().equals("admin") && lg.getPassword().equals("openEHR2008")) {
+                String passEnc = Encriptar.generateDigest(pass);
+                if (lg.verificarUser(user, passEnc)) {
+                    if (lg.getPermisos().contains("5")) {
                         Leer le = new Leer();
-                        if (!le.leer().equals("Error al leer")){
-                          btnKeys.setVisible(false);
+                        if (!le.leer().equals("Error al leer")) {
+                            btnKeys.setVisible(false);
+                        }else{
+                            JOptionPane.showMessageDialog(null, "El id del programa no existe ó es imposible encontrarlo");
                         }
+                        btnRoot.setVisible(true);
                         pnAdministrar.setVisible(true);
+                        ocultarOpcAdmOrRoot(true, true);
+                        ocultarLogoSu(true);
                     } else {
                         pnAdmin.setVisible(true);
+                        if (lg.getPermisos().contains("4")) {
+                            pnLogoUsers.setVisible(true);
+                            pnLogoPatients.setVisible(false);
+                            btnUsers.setVisible(true);
+                            btnCrearPacientes.setVisible(true);
+                            addFinger.setVisible(true);
+                            updatePatient.setVisible(true);
+                            btnImportPatient.setVisible(true);
+                            btnListControl.setVisible(true);
+                            btnListPatients.setVisible(true);
+                            btnListControl.setVisible(true);
+                            btnListPatients.setVisible(true);
+                            deletePatient.setVisible(true);
+                        }
+                        if (lg.getPermisos().contains("1")) {
+                            pnLogoUsers.setVisible(false);
+                            pnLogoPatients.setVisible(true);
+                            btnUsers.setVisible(true);
+                            btnCrearPacientes.setVisible(true);
+                            addFinger.setVisible(true);
+                            updatePatient.setVisible(true);
+                            btnImportPatient.setVisible(true);
+                        }
+                        if (lg.getPermisos().contains("2")) {
+                            pnLogoUsers.setVisible(false);
+                            pnLogoPatients.setVisible(true);
+                            btnUsers.setVisible(true);
+                            btnListControl.setVisible(true);
+                            btnListPatients.setVisible(true);
+                        }
+                        if (lg.getPermisos().contains("3")) {
+                            deletePatient.setVisible(true);
+                        }
                     }
                     pnConfig.setVisible(false);
-                    pnContentEnroll.setVisible(false);
-                    lblUser.setText(lg.getUser());
+                    lblUser.setText(lg.getNombre());
+                    btnVerificarPatient.setVisible(false);
+                    btnSalir.setVisible(true);
+                    btnConfig.setVisible(false);
+
                 } else {
                     JOptionPane.showMessageDialog(null, "Datos incorrectos");
                 }
             } catch (SQLException ex) {
                 System.out.println(ex);
+            } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
+                Logger.getLogger(principal.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_btnIngresarActionPerformed
-
-    private void btnKeysMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnKeysMouseClicked
-        Escribir es = new Escribir();
-        if (es.escribir()){
-          btnKeys.setVisible(false);
-        }
-        
-    }//GEN-LAST:event_btnKeysMouseClicked
-
-    private void jLabel3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel3MouseClicked
-        pnConfig.setVisible(true);
-        ocultarPnEnroll();
-        ocultarPnAdministrar();
-        ocultarPnAdmin();
-        limpiarLogin();
-    }//GEN-LAST:event_jLabel3MouseClicked
-
-    private void jLabel6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel6MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jLabel6MouseClicked
 
     private void jLabel7MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel7MouseClicked
         // TODO add your handling code here:
     }//GEN-LAST:event_jLabel7MouseClicked
 
-    private void jLabel8MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel8MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jLabel8MouseClicked
-
     private void btnGuardarConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarConfigActionPerformed
-        String sede = txtSede.getText();
-        String direccion = txtDir.getText();
-        String programa = (String) cboPrograma.getSelectedItem();
-        if (sede.equals("")) {
-            JOptionPane.showMessageDialog(null, "El campo sede no debe estar vacio");
-            txtUser.requestFocus();
-        } else if (direccion.equals("")) {
-            JOptionPane.showMessageDialog(null, "El campo direccion no debe estar vacio");
-            txtpassword.requestFocus();
-        }
-        else if (programa.equals("Seleccione")) {
-            JOptionPane.showMessageDialog(null, "El campo programa no debe estar vacio");
-            txtpassword.requestFocus();
-        }else {
-            try {
-                Leer le = new Leer();
-                configuracionSoftware cf = new configuracionSoftware(le.leer(), sede, direccion, programa);
-                if (cf.addConfig()){
-                  JOptionPane.showMessageDialog(null, "Se ha configurado el programa con exito");
-                }               
-            } catch (SQLException ex) {
-                System.out.println(ex);
+        String tipoAt = (String) cboTipoAtencion.getSelectedItem();
+        String opc = groupModel.getSelection().getActionCommand();
+        Leer le = new Leer();
+        if (tipoAt.equals("Seleccione")) {
+            JOptionPane.showMessageDialog(null, "Sleccione tipo de atencion");
+            cboTipoAtencion.requestFocus();
+        } else if (le.leer().equals("") || le.leer().equals("Error al leer")) {
+            JOptionPane.showMessageDialog(null, "No hay key de software");
+        } else {
+            configuracionSoftware cf = new configuracionSoftware(le.leer(), tipoAt, Integer.parseInt(opc));
+            if (cf.addConfig()) {
+                JOptionPane.showMessageDialog(null, "Se ha configurado el programa con exito");
+                clearFormConfigSoftware();
+            } else {
+                JOptionPane.showMessageDialog(null, "Error al generar la configuracion");
             }
-        }    
+        }
     }//GEN-LAST:event_btnGuardarConfigActionPerformed
 
-    private void btnCreateUsersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnCreateUsersMouseClicked
+    private void jLabel11MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel11MouseClicked
         // TODO add your handling code here:
-    }//GEN-LAST:event_btnCreateUsersMouseClicked
+    }//GEN-LAST:event_jLabel11MouseClicked
 
-    private void btnCreateUsers1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnCreateUsers1MouseClicked
+    private void jLabel12MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel12MouseClicked
         // TODO add your handling code here:
-    }//GEN-LAST:event_btnCreateUsers1MouseClicked
+    }//GEN-LAST:event_jLabel12MouseClicked
+
+    private void btnGuardarUserCreatedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarUserCreatedActionPerformed
+        String pass = new String(txtPassUserSystem.getPassword());
+        String user = txtUserSystem.getText();
+        String nombre = txtNombreUserSystem.getText();
+        String doc = txtDocumentCreatedUser.getText();
+        int id = 0;
+        if (!lblIdAdministrator.getText().equals("")) {
+            id = Integer.parseInt(lblIdAdministrator.getText());
+        }
+        if (doc.equals("")) {
+            JOptionPane.showMessageDialog(null, "El campo documento esta vacio");
+            txtDocumentCreatedUser.requestFocus();
+        } else if (nombre.equals("")) {
+            JOptionPane.showMessageDialog(null, "El campo nombre esta vacio");
+            txtNombreUserSystem.requestFocus();
+        } else if (user.equals("")) {
+            JOptionPane.showMessageDialog(null, "El campo usuario esta vacio");
+            txtUserSystem.requestFocus();
+        } else if (pass.equals("")) {
+            JOptionPane.showMessageDialog(null, "El campo contraseña esta vacio");
+            txtPassUserSystem.requestFocus();
+        } else {
+            try {
+                String passEnc = Encriptar.generateDigest(pass);
+                configUsersSystem cus = new configUsersSystem(passEnc, user, nombre, permisos, OpcRoot, doc, id);
+                if (cus.addConfig()) {
+                    JOptionPane.showMessageDialog(null, "Usuario creado con exito");
+                    permisos.clear();
+                    limpiarFormAddUsers();
+                    ocultarPnAddUsers(false);
+                    cargarUsersRoot("");
+                    ocultarPnlisTUsersRoot(true);                    
+                } else {
+                    JOptionPane.showMessageDialog(null, "Error al crear el usuario, el número de documento ya existe");
+                }
+            } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
+                Logger.getLogger(principal.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_btnGuardarUserCreatedActionPerformed
+
+    private void jLabel13MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel13MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jLabel13MouseClicked
+
+    private void lblCloseMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblCloseMouseClicked
+        System.exit(0);
+    }//GEN-LAST:event_lblCloseMouseClicked
+
+    private void jLabel14MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel14MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jLabel14MouseClicked
+
+    private void jLabel15MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel15MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jLabel15MouseClicked
+
+    private void btnAddPatientActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddPatientActionPerformed
+
+        String typeIdent = (String) cboTipoIdPatient.getSelectedItem();
+        String idPatient = txtIdPatient.getText();
+        String nombre = txtNomPattient.getText();
+        String ape = txtApePat.getText();
+        if (typeIdent.equals("Seleccione")) {
+            JOptionPane.showMessageDialog(null, "El campo Tipo documento esta vacio");
+            cboTipoIdPatient.requestFocus();
+        } else if (idPatient.equals("")) {
+            JOptionPane.showMessageDialog(null, "El campo Documento esta vacio");
+            txtIdPatient.requestFocus();
+        } else if (nombre.equals("")) {
+            JOptionPane.showMessageDialog(null, "El campo nombre esta vacio");
+            txtNomPattient.requestFocus();
+        } else if (ape.equals("")) {
+            JOptionPane.showMessageDialog(null, "El campo apellidos esta vacio");
+            txtApePat.requestFocus();
+        } else {
+            Patietns ap = new Patietns(typeIdent, idPatient, nombre, ape, lblIdPt.getText(), OpcPatien);
+            if (ap.addPatients()) {
+                String message = "creado";
+                if (!OpcPatien.equals("create")) {
+                    message = "actualizado";
+                }
+                JOptionPane.showMessageDialog(null, "Paciente " + message + " con exito");
+                limpiarFormPatient();
+                cargarPatients("");
+                ocultarPnListPatients(true);
+                ocultarPnPatient(false);
+                ocultarPnAddUsers(false);
+
+            } else {
+                JOptionPane.showMessageDialog(null, "Error al crear el paciente");
+            }
+        }
+
+    }//GEN-LAST:event_btnAddPatientActionPerformed
+
+    private void jLabel16MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel16MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jLabel16MouseClicked
+
+    private void jLabel17MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel17MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jLabel17MouseClicked
+
+    private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
+        ocultarPnHome(true);
+        ocultarPnConfig(false);
+    }//GEN-LAST:event_btnCancelarActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        String created = "";
+        OpcPatien = "create";
+        int filas = tbPatientsImport.getRowCount();
+        int columnas = tbPatientsImport.getColumnCount();
+        Patietns p;
+        ArrayList<Patietns> datos = new ArrayList<>();
+        for (int i = 0; i < filas; i++) {
+            p = new Patietns();
+            for (int j = 0; j < columnas; j++) {
+                switch (j) {
+                    case 0:
+                        p.setTypeIdent(tbPatientsImport.getModel().getValueAt(i, j).toString());
+                        break;
+                    case 1:
+                        p.setIdPatient(tbPatientsImport.getModel().getValueAt(i, j).toString());
+                        break;
+                    case 2:
+                        p.setNombre(tbPatientsImport.getModel().getValueAt(i, j).toString());
+                        break;
+                    case 3:
+                        p.setApellido(tbPatientsImport.getModel().getValueAt(i, j).toString());
+                        break;
+                }
+            }
+            datos.add(p);
+        }
+        Iterator<Patietns> itr = datos.iterator();
+        while (itr.hasNext()) {
+            Patietns patient = itr.next();
+            patient.setOpc(OpcPatien);
+            if (patient.addPatients()) {
+                created = "Pacientes agragados a la base de datos";
+            } else {
+                created = "Solo se agregaron pacientes que no estaban en la base de datos..!";
+            }
+        }
+        JOptionPane.showMessageDialog(null, created);
+        ocultarPnListPatientsImport(false);
+        ocultarPnPatient(false);
+        ocultarPnListPatients(true);
+        cargarPatients("");
+
+    }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        ocultarPnPatient(false);
+        ocultarPnListPatients(false);
+        ocultarPnListPatientsImport(false);
+        pnLogoPatients.setVisible(true);
+        ocultarPnVerificarPatient(false);
+
+        ocultarPnAdmin(true);
+        ocultarPnControlPatient(false);
+        limpiarFormPatient();
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void addFingerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addFingerActionPerformed
+        App.addFinger af = new App.addFinger(null, true);
+        int fila = tbPatients.getSelectedRow();
+        if (fila >= 0) {
+            String idDocumento = tbPatients.getValueAt(fila, 1).toString();
+            af.lblDocumentAddFinger.setText(idDocumento);
+            af.txtArea.setEditable(false);
+            af.setLocationRelativeTo(null);
+            af.setVisible(true);
+        }
+    }//GEN-LAST:event_addFingerActionPerformed
+
+    private void btnFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFileActionPerformed
+
+    }//GEN-LAST:event_btnFileActionPerformed
+
+    private void btnConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConfigActionPerformed
+        stop();
+        ocultarPnConfig(true);
+
+        ocultarPnVerificarPatient(false);
+        ocultarPnAdministrar(false);
+        ocultarPnAdmin(false);
+        ocultarPnHome(false);
+        limpiarLogin();
+        limpiarpnVerify();
+    }//GEN-LAST:event_btnConfigActionPerformed
+
+    private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalirActionPerformed
+        int response = JOptionPane.showConfirmDialog(null, "Esta seguro de cerrar la sesión actual?", "Aviso..!",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (response == JOptionPane.YES_OPTION) {
+            ocultarMenus();
+            lg.setNombre(null);
+            lg.setPassword(null);
+            lg.setUser(null);
+            lg.limpiarPermisos();
+            lblUser.setText("");
+            ocultarPnAdministrar(false);
+            ocultarPnAdmin(false);
+            ocultarPnListPatients(false);
+            ocultarPnListPatientsImport(false);
+            ocultarPnPatient(false);
+            limpiarLogin();
+            ocultarPnAddUsers(false);
+            ocultarPnHome(true);
+            ocultarPnVerificarPatient(false);
+            ocultarBtnVerifyPatients();
+            limpiarFormAdministrar();
+            ocultarPnConfigSystemUsers(false);
+            ocultarPnlisTUsersRoot(false);
+            ocultarOpcAdmOrRoot(false, false);
+            ocultarPnConfSofware(false);
+        }
+    }//GEN-LAST:event_btnSalirActionPerformed
+
+    private void btnVerificarPatientActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVerificarPatientActionPerformed
+        stop();
+        ControlPatients cp = new ControlPatients();
+        limpiarpnVerify();
+        if (cp.getModelAndAtention()) {
+            if (cp.getTipo_atencion().equals("Dispensación") || cp.getTipo_atencion().equals("Infusión")) {
+                mostrarLblAndText(true);
+            }
+            ocultarPnVerificarPatient(true);
+            ocultarPnConfig(false);
+            ocultarPnAdministrar(false);
+            ocultarPnAdmin(false);
+            ocultarPnHome(false);
+            txtArea1.setEditable(false);
+            Iniciar();
+            start();
+        } else {
+            JOptionPane.showMessageDialog(null, "El programa no se configuro bien, verifique que el Modelo en configuracion de software...!");
+        }
+    }//GEN-LAST:event_btnVerificarPatientActionPerformed
+
+    private void btnImportPatientActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnImportPatientActionPerformed
+        ocultarPnPatient(false);
+        ocultarPnListPatients(false);
+        ocultarPnControlPatient(false);
+        pnLogoPatients.setVisible(false);
+        pnLogoUsers.setVisible(false);
+        ocultarPnVerificarPatient(false);
+        ocultarPnAddUsers(false);
+        ocultarPnAdmin(true);
+        countAction++;
+        if (countAction == 1) {
+            addFilter();
+        }
+        if (FileChooser.showDialog(null, "Seleccionar Archivo") == JFileChooser.APPROVE_OPTION) {
+            ProgresImport.setVisible(true);
+            archivo = FileChooser.getSelectedFile();
+            ModeloExcel me = new ModeloExcel(archivo, tbPatientsImport, ProgresImport, pnListPatientImport);
+            Thread hilo;
+            if (archivo.getName().endsWith("xls") || archivo.getName().endsWith("xlsx")) {
+                hilo = new Thread(me);
+                hilo.start();
+            } else {
+                JOptionPane.showMessageDialog(null, "Elija un formato valido");
+            }
+        } else {
+            pnLogoPatients.setVisible(true);
+        }
+    }//GEN-LAST:event_btnImportPatientActionPerformed
+
+    private void btnCrearPacientesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCrearPacientesActionPerformed
+        ocultarPnPatient(true);
+        ocultarPnListPatients(false);
+        ocultarPnAddUsers(false);
+        ocultarPnListPatientsImport(false);
+        pnLogoPatients.setVisible(false);
+        pnLogoUsers.setVisible(false);
+        ocultarPnVerificarPatient(false);
+        ocultarPnAdmin(true);
+        ocultarPnControlPatient(false);
+        OpcPatien = "create";
+
+    }//GEN-LAST:event_btnCrearPacientesActionPerformed
+
+    private void btnListPatientsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnListPatientsActionPerformed
+        cargarPatients("");
+        ocultarPnListPatients(true);
+        ocultarPnListPatientsImport(false);
+        ocultarPnPatient(false);
+        ocultarPnAddUsers(false);
+        pnLogoPatients.setVisible(false);
+        pnLogoUsers.setVisible(false);
+        ocultarPnVerificarPatient(false);
+        ocultarPnControlPatient(false);
+    }//GEN-LAST:event_btnListPatientsActionPerformed
+
+    private void btnKeysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnKeysActionPerformed
+        Escribir es = new Escribir();
+        if (es.escribir()) {
+            btnKeys.setVisible(false);
+        }
+    }//GEN-LAST:event_btnKeysActionPerformed
+
+    private void btnCreateUsersSystemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCreateUsersSystemActionPerformed
+        ocultarPnConfSofware(false);
+        ocultarPnConfigSystemUsers(true);
+        ocultarLogoSu(false);
+        ocultarPnlisTUsersRoot(false);
+        OpcRoot = "create";
+        limpiarFormAddUsers();
+        permisos.clear();
+    }//GEN-LAST:event_btnCreateUsersSystemActionPerformed
+
+    private void btnConfigSoftwareActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConfigSoftwareActionPerformed
+        ocultarPnConfSofware(true);
+        ocultarPnConfigSystemUsers(false);
+        ocultarPnlisTUsersRoot(false);
+        ocultarLogoSu(false);
+    }//GEN-LAST:event_btnConfigSoftwareActionPerformed
+
+    private void btnListControlActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnListControlActionPerformed
+        cargarControlPatients("", "1");
+        ocultarPnControlPatient(true);
+        ocultarPnPatient(false);
+        ocultarPnListPatients(false);
+        ocultarPnListPatientsImport(false);
+        pnLogoPatients.setVisible(false);
+        ocultarPnVerificarPatient(false);
+        ocultarPnAddUsers(false);
+        ocultarPnAdmin(true);
+    }//GEN-LAST:event_btnListControlActionPerformed
+
+    private void btnCancelPatientActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelPatientActionPerformed
+        ocultarPnPatient(false);
+        ocultarPnListPatients(false);
+        ocultarPnListPatientsImport(false);
+        pnLogoPatients.setVisible(true);
+        pnLogoUsers.setVisible(false);
+        ocultarPnVerificarPatient(false);
+        ocultarPnAdmin(true);
+        ocultarPnControlPatient(false);
+        limpiarFormPatient();
+    }//GEN-LAST:event_btnCancelPatientActionPerformed
+
+    private void updatePatientActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updatePatientActionPerformed
+        int fila = tbPatients.getSelectedRow();
+        if (fila >= 0) {
+            ocultarPnPatient(true);
+            ocultarPnListPatients(false);
+            ocultarPnListPatientsImport(false);
+            pnLogoPatients.setVisible(false);
+            ocultarPnVerificarPatient(false);
+
+            ocultarPnAdmin(true);
+            ocultarPnControlPatient(false);
+            String tipoDoc = tbPatients.getValueAt(fila, 0).toString();
+            cboTipoIdPatient.setSelectedItem(tipoDoc);
+            txtIdPatient.setText(tbPatients.getValueAt(fila, 1).toString());
+            txtNomPattient.setText(tbPatients.getValueAt(fila, 2).toString());
+            txtApePat.setText(tbPatients.getValueAt(fila, 3).toString());
+            int id = 0;
+            try {
+                String sqlP = "SELECT  id_paciente FROM pacientes WHERE identificacion ='" + tbPatients.getValueAt(fila, 1).toString() + "'";
+                PreparedStatement stm = null;
+                stm = cn.prepareStatement(sqlP);
+                ResultSet rsp = stm.executeQuery();
+                if (rsp != null && rsp.next()) {
+                    id = rsp.getInt("id_paciente");
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, ex);
+            }
+            lblIdPt.setText(Integer.toString(id));
+            OpcPatien = "update";
+        } else {
+            JOptionPane.showMessageDialog(null, "No has seleccionado un registro..!");
+        }
+    }//GEN-LAST:event_updatePatientActionPerformed
+
+    private void deletePatientActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletePatientActionPerformed
+        int fila = tbPatients.getSelectedRow();
+        if (fila >= 0) {
+            int response = JOptionPane.showConfirmDialog(null, "Esta seguro el paciente ?", "Aviso..!",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (response == JOptionPane.YES_OPTION) {
+                ocultarPnPatient(false);
+                ocultarPnListPatients(false);
+                ocultarPnListPatientsImport(false);
+                pnLogoPatients.setVisible(false);
+                ocultarPnVerificarPatient(false);
+
+                ocultarPnAdmin(true);
+                ocultarPnControlPatient(false);
+                try {
+                    String sqlP = "SELECT  id_paciente FROM pacientes WHERE identificacion ='" + tbPatients.getValueAt(fila, 1).toString() + "'";
+                    PreparedStatement stm = cn.prepareStatement(sqlP);
+                    ResultSet rsp = stm.executeQuery();
+                    if (rsp != null && rsp.next()) {
+                        Patietns p = new Patietns(Integer.toString(rsp.getInt("id_paciente")));
+                        if (p.deletePatient()) {
+                            JOptionPane.showMessageDialog(null, "Paciente eliminado con exito");
+                            cargarPatients("");
+                            ocultarPnListPatients(true);
+                            ocultarPnPatient(false);
+                            ocultarPnAddUsers(false);
+                        }
+                    }
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(null, ex);
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "No has seleccionado un registro..!");
+        }
+    }//GEN-LAST:event_deletePatientActionPerformed
+
+    private void btnFindPatientActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFindPatientActionPerformed
+        String dato = txtFindPatient.getText();
+        if (!dato.equals("")) {
+            cargarPatients(dato);
+        } else {
+            cargarPatients("");
+        }
+
+    }//GEN-LAST:event_btnFindPatientActionPerformed
+
+    private void btnFindUsersRootActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFindUsersRootActionPerformed
+        String dato = txtFindUsersRoot.getText();
+        cargarUsersRoot(dato);
+    }//GEN-LAST:event_btnFindUsersRootActionPerformed
+
+    private void btnListarRootActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnListarRootActionPerformed
+        ocultarPnConfigSystemUsers(false);
+        ocultarPnConfSofware(false);
+        cargarUsersRoot("");
+        ocultarPnlisTUsersRoot(true);
+        ocultarLogoSu(false);
+    }//GEN-LAST:event_btnListarRootActionPerformed
+
+    private void btnUpdateAdministratorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateAdministratorActionPerformed
+        int fila = tbUsersRoot.getSelectedRow();
+        if (fila >= 0) {
+            txtDocumentCreatedUser.setText(tbUsersRoot.getValueAt(fila, 0).toString());
+            txtNombreUserSystem.setText(tbUsersRoot.getValueAt(fila, 1).toString());
+            txtUserSystem.setText(tbUsersRoot.getValueAt(fila, 2).toString());
+            String pass = "";
+            int id = 0;
+            try {
+                String sqlP = "SELECT  * FROM usuarios WHERE documento ='" + tbUsersRoot.getValueAt(fila, 0).toString() + "'";
+                PreparedStatement stm;
+                stm = cn.prepareStatement(sqlP);
+                ResultSet rsp = stm.executeQuery();
+                if (rsp != null && rsp.next()) {
+                    pass = rsp.getString("password");
+                    id = rsp.getInt("id_user");
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, ex);
+            }
+            try {
+                String sqlPermisos = "SELECT * FROM usuarios_permisos WHERE id_user = " + id + "";
+                PreparedStatement stmp = cn.prepareStatement(sqlPermisos);
+                ResultSet rsp = stmp.executeQuery();
+                while (rsp.next()) {
+                    String permiso = Integer.toString(rsp.getInt("id_permiso"));
+                    permisos.add(permiso);
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, ex);
+            }
+            if (permisos.contains("4") || permisos.contains("5")) {
+                chkAdmin.setSelected(true);
+            }
+            if (permisos.contains("1")) {
+                chkCrear.setSelected(true);
+            }
+            if (permisos.contains("2")) {
+                chkListar.setSelected(true);
+            }
+            if (permisos.contains("3")) {
+                chkEliminar.setSelected(true);
+            }
+            txtPassUserSystem.setText(pass);
+            lblIdAdministrator.setText(Integer.toString(id));
+            OpcRoot = "update";
+            ocultarPnConfSofware(false);
+            ocultarPnConfigSystemUsers(true);
+            ocultarLogoSu(false);
+            ocultarPnlisTUsersRoot(false);
+        } else {
+            JOptionPane.showMessageDialog(null, "No has seleccionado un registro..!");
+        }
+    }//GEN-LAST:event_btnUpdateAdministratorActionPerformed
+
+    private void jLabel19MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel19MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jLabel19MouseClicked
+
+    private void deleteAdministratorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteAdministratorActionPerformed
+        int fila = tbUsersRoot.getSelectedRow();
+        if (fila >= 0) {
+            int response = JOptionPane.showConfirmDialog(null, "Esta seguro este usuario ?", "Aviso..!",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (response == JOptionPane.YES_OPTION) {
+                try {
+                    String sqlP = "SELECT  id_user FROM usuarios WHERE documento ='" + tbUsersRoot.getValueAt(fila, 0).toString() + "'";
+                    PreparedStatement stm = cn.prepareStatement(sqlP);
+                    ResultSet rsp = stm.executeQuery();
+                    if (rsp != null && rsp.next()) {
+                        configUsersSystem cu = new configUsersSystem(rsp.getInt("id_user"));
+                        if (cu.deleteUsers()) {
+                            JOptionPane.showMessageDialog(null, "Usuario eliminado con exito");
+                            cargarUsersRoot("");
+                        }
+                    }
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(null, ex);
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "No has seleccionado un registro..!");
+        }
+    }//GEN-LAST:event_deleteAdministratorActionPerformed
+
+    private void btnCancelarConfigActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarConfigActionPerformed
+        ocultarPnConfigSystemUsers(false);
+        ocultarPnlisTUsersRoot(false);
+        ocultarPnConfSofware(false);
+        ocultarLogoSu(true);
+    }//GEN-LAST:event_btnCancelarConfigActionPerformed
+
+    private void btnCancelarUserCreatedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarUserCreatedActionPerformed
+        ocultarPnAdmin(true);
+        ocultarPnPatient(false);
+        ocultarPnAddUsers(false);
+        ocultarPnListPatients(false);
+        ocultarPnListPatientsImport(false);
+        pnLogoPatients.setVisible(false);
+        pnLogoUsers.setVisible(true);
+        ocultarPnVerificarPatient(false);
+        ocultarPnControlPatient(false);
+        limpiarFormAddUsers();
+        permisos.clear();
+    }//GEN-LAST:event_btnCancelarUserCreatedActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        ocultarPnPatient(false);
+        ocultarPnListPatients(false);
+        pnLogoPatients.setVisible(false);
+        pnLogoUsers.setVisible(false);
+        ocultarPnVerificarPatient(false);
+        ocultarPnAddUsers(false);
+        ocultarPnAdmin(true);
+        countAction++;
+        if (countAction == 1) {
+            addFilter();
+        }
+        ProgresImport.setVisible(true);
+        if (FileChooser.showDialog(null, "Exportar") == JFileChooser.APPROVE_OPTION) {
+
+            archivo = FileChooser.getSelectedFile();
+            ExportExcel ee = new ExportExcel();
+            if (archivo.getName().endsWith("xls") || archivo.getName().endsWith("xlsx")) {
+                String response = ee.Export(archivo, tbControlPatienst);
+                JOptionPane.showMessageDialog(null, response);
+            } else {
+                JOptionPane.showMessageDialog(null, "Asegusere de que el nombre del archivo tenga una extensión valida...!");
+            }
+        } else {
+            pnLogoPatients.setVisible(true);
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void btntxtFindControlActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btntxtFindControlActionPerformed
+        String dato = txtFindControl.getText();
+        String opc = groupm.getSelection().getActionCommand();
+        if (!dato.equals("")) {
+            cargarControlPatients(dato, opc);
+        } else {
+            cargarControlPatients("", "");
+        }
+    }//GEN-LAST:event_btntxtFindControlActionPerformed
+
+    private void btnTheProgramingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTheProgramingActionPerformed
+        AcercaDe ad = new AcercaDe(this, true);
+        ad.setLocationRelativeTo(null);
+        ad.setVisible(true);
+    }//GEN-LAST:event_btnTheProgramingActionPerformed
+
+    private void printFingerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printFingerActionPerformed
+        Patietns pt = new Patietns();
+        int fila = tbPatients.getSelectedRow();
+        if (fila >= 0) {
+            String idDocumento = tbPatients.getValueAt(fila, 1).toString();
+            try {
+                pt.verReporte(idDocumento);
+            } catch (Exception e) {
+                System.out.println("error:" + e);
+            }
+        }
+
+    }//GEN-LAST:event_printFingerActionPerformed
 
     /**
      * @param args the command line arguments
@@ -497,50 +1922,148 @@ public final class principal extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new principal().setVisible(true);
+                try {
+                    new principal().setVisible(true);
+                } catch (SQLException ex) {
+                    Logger.getLogger(principal.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.ButtonGroup HuellaDedos;
+    public static javax.swing.JProgressBar ProgresImport;
+    private javax.swing.JMenuItem addFinger;
+    private javax.swing.JMenu btnAbout;
+    private javax.swing.JButton btnAddPatient;
+    private javax.swing.JButton btnCancelPatient;
     private javax.swing.JButton btnCancelar;
     private javax.swing.JButton btnCancelarConfig;
-    private javax.swing.JLabel btnCreateUsers;
-    private javax.swing.JLabel btnCreateUsers1;
+    private javax.swing.JButton btnCancelarUserCreated;
+    private javax.swing.JMenuItem btnConfig;
+    private javax.swing.JMenuItem btnConfigSoftware;
+    private javax.swing.JMenuItem btnCrearPacientes;
+    private javax.swing.JMenuItem btnCreateUsersSystem;
+    private javax.swing.JMenu btnFile;
+    private javax.swing.JButton btnFindPatient;
+    private javax.swing.JButton btnFindUsersRoot;
     private javax.swing.JButton btnGuardarConfig;
+    private javax.swing.JButton btnGuardarUserCreated;
+    private javax.swing.JMenuItem btnImportPatient;
     private javax.swing.JButton btnIngresar;
-    private javax.swing.JLabel btnKeys;
-    private javax.swing.JComboBox cboPrograma;
+    private javax.swing.JMenuItem btnKeys;
+    private javax.swing.JMenuItem btnListControl;
+    private javax.swing.JMenuItem btnListPatients;
+    private javax.swing.JMenuItem btnListarRoot;
+    private javax.swing.JMenu btnRoot;
+    private javax.swing.JMenuItem btnSalir;
+    private javax.swing.JMenuItem btnThePrograming;
+    private javax.swing.JMenuItem btnUpdateAdministrator;
+    private javax.swing.JMenu btnUsers;
+    private javax.swing.JMenuItem btnVerificarPatient;
+    private javax.swing.JButton btntxtFindControl;
+    private javax.swing.JComboBox cboTipoAtencion;
+    private javax.swing.JComboBox cboTipoIdPatient;
+    private javax.swing.JCheckBox chkAdmin;
+    private javax.swing.JCheckBox chkCrear;
+    private javax.swing.JCheckBox chkEliminar;
+    private javax.swing.JCheckBox chkListar;
+    private javax.swing.JMenuItem deleteAdministrator;
+    private javax.swing.JMenuItem deletePatient;
+    private javax.swing.ButtonGroup groupAdmOrRoot;
+    private javax.swing.ButtonGroup groupModel;
+    private javax.swing.ButtonGroup groupm;
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
+    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPlogo;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JPanel jpMenu;
-    private javax.swing.JLabel lblEstadohuellas;
-    private javax.swing.JLabel lblImagenHuella;
+    public javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
+    public javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPane5;
+    public javax.swing.JScrollPane jScrollPane6;
+    private javax.swing.JLabel lblApellidos;
+    private javax.swing.JLabel lblApellidos1;
+    private javax.swing.JLabel lblClose;
+    private javax.swing.JLabel lblDocument;
+    private javax.swing.JLabel lblDocument1;
+    private javax.swing.JLabel lblDocument2;
+    private javax.swing.JLabel lblIdAdministrator;
+    private javax.swing.JLabel lblIdPt;
+    private javax.swing.JLabel lblImagenHuella1;
+    private javax.swing.JLabel lblInfoPatient;
+    private javax.swing.JLabel lblLog;
+    private javax.swing.JLabel lblLogoADM;
+    private javax.swing.JLabel lblLogoADMusers;
+    private javax.swing.JLabel lblLogoSu;
+    private javax.swing.JLabel lblNombres;
+    private javax.swing.JLabel lblNombres1;
+    private javax.swing.JLabel lblNotfound;
     private javax.swing.JLabel lblUser;
-    private javax.swing.JLabel lblUser1;
-    private javax.swing.JRadioButton opcIndice;
-    private javax.swing.JRadioButton opcIndice2;
+    private javax.swing.JRadioButton opcAdmin;
+    private javax.swing.JRadioButton opcModel1;
+    private javax.swing.JRadioButton opcModel2;
+    private javax.swing.JRadioButton opcRoot;
+    private javax.swing.JRadioButton opcm1;
+    private javax.swing.JRadioButton opcm2;
+    private javax.swing.JPanel pnAddPatient;
+    private javax.swing.JPanel pnAddUser;
     private javax.swing.JPanel pnAdmin;
     private javax.swing.JPanel pnAdministrar;
     private javax.swing.JPanel pnConfig;
-    private javax.swing.JPanel pnContentEnroll;
-    private javax.swing.JTextArea txtArea;
-    private javax.swing.JTextField txtDir;
-    private javax.swing.JTextField txtSede;
+    private javax.swing.JPanel pnConfigSoftware;
+    private javax.swing.JPanel pnHome;
+    private javax.swing.JPanel pnHuellas1;
+    private javax.swing.JPanel pnListControl;
+    private javax.swing.JPanel pnListPatient;
+    public javax.swing.JPanel pnListPatientImport;
+    private javax.swing.JPanel pnListUsersRoot;
+    private javax.swing.JPanel pnLogoPatients;
+    private javax.swing.JPanel pnLogoSU;
+    private javax.swing.JPanel pnLogoUsers;
+    private javax.swing.JPanel pnVerificarPatients;
+    private javax.swing.JPopupMenu popupAddFingerPatient;
+    private javax.swing.JPopupMenu popupAdministrator;
+    private javax.swing.JMenuItem printFinger;
+    public javax.swing.JTable tbControlPatienst;
+    public javax.swing.JTable tbPatients;
+    private javax.swing.JTable tbPatientsImport;
+    public javax.swing.JTable tbUsersRoot;
+    private javax.swing.JTextField txtApePat;
+    private javax.swing.JTextArea txtArea1;
+    private javax.swing.JTextField txtDocumentCreatedUser;
+    private javax.swing.JTextField txtFindControl;
+    private javax.swing.JTextField txtFindPatient;
+    private javax.swing.JTextField txtFindUsersRoot;
+    private javax.swing.JTextField txtIdPatient;
+    private javax.swing.JTextField txtNomPattient;
+    private javax.swing.JTextField txtNombreUserSystem;
+    private javax.swing.JPasswordField txtPassUserSystem;
     private javax.swing.JTextField txtUser;
+    private javax.swing.JTextField txtUserSystem;
+    private javax.swing.JTextField txtVerifyDocument;
     private javax.swing.JPasswordField txtpassword;
+    private javax.swing.JMenuItem updatePatient;
     // End of variables declaration//GEN-END:variables
 
     //Inicio metodo Start
@@ -548,19 +2071,9 @@ public final class principal extends javax.swing.JFrame {
         Lector.addDataListener(new DPFPDataAdapter() {
             @Override
             public void dataAcquired(final DPFPDataEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        EnviarTexto("La Huella Digital ha sido Capturada");
-                        try {
-                            ProcesarCaptura(e.getSample());
-                        } catch (IOException ex) {
-                            System.out.println("error: " + ex);
-                        } catch (SQLException ex) {
-                            Logger.getLogger(principal.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(principal.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
+                SwingUtilities.invokeLater(() -> {
+                    EnviarTexto("La Huella Digital ha sido Capturada");
+                    process(e.getSample());
                 });
             }
         });
@@ -590,7 +2103,16 @@ public final class principal extends javax.swing.JFrame {
             public void fingerTouched(final DPFPSensorEvent e) {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
-                        EnviarTexto("El dedo ha sido colocado sobre el Lector de Huella");
+                        if (!txtVerifyDocument.isVisible()) {
+                            EnviarTexto("El dedo ha sido colocado sobre el Lector de Huella");
+                        } else {
+                            if (txtVerifyDocument.getText().equals("")) {
+                                JOptionPane.showMessageDialog(null, "El campo documento no debebestar vacio..!");
+                                txtVerifyDocument.requestFocus();
+                            } else {
+                                EnviarTexto("El dedo ha sido colocado sobre el Lector de Huella");
+                            }
+                        }
                     }
                 });
             }
@@ -623,63 +2145,6 @@ public final class principal extends javax.swing.JFrame {
     //Fin variables para la extraccion de caracteristicas huella
 
     //Inicio metodo procesar captura
-    public void ProcesarCaptura(DPFPSample sample) throws IOException, SQLException, InterruptedException {
-        String id = "";
-//        sql = "SELECT numero_documento FROM tercero WHERE numero_documento = '" + txtId.getText() + "'";
-//        st = cn.createStatement();
-//        rs = st.executeQuery(sql);
-//        if (rs.next()) {
-//            id = rs.getString("numero_documento");
-//        }
-//        if (txtId.getText().equals("")) {
-//            JOptionPane.showMessageDialog(null, "El campo identificacion no debe estar vacio");
-//            txtId.requestFocus();
-//        } else if (txtId.getText().equals(id)) {
-        // Procesar la muestra de la huella y crear un conjunto de características con el propósito de inscripción.
-        featuresinscripcion = extraerCaracteristicas(sample, DPFPDataPurpose.DATA_PURPOSE_ENROLLMENT);
-        // Procesar la muestra de la huella y crear un conjunto de características con el propósito de verificacion.
-        featuresverificacion = extraerCaracteristicas(sample, DPFPDataPurpose.DATA_PURPOSE_VERIFICATION);
-        // Comprobar la calidad de la muestra de la huella y lo añade a su reclutador si es bueno
-        if (featuresinscripcion != null) {
-            try {
-//                    System.out.println("Las Caracteristicas de la Huella han sido creada");
-                Reclutador.addFeatures(featuresinscripcion);// Agregar las caracteristicas de la huella a la plantilla a crear
-                // Dibuja la huella dactilar capturada.
-                Image image = CrearImagenHuella(sample);
-                DibujarHuella(image);
-            } catch (DPFPImageQualityException ex) {
-                System.err.println("Error: " + ex.getMessage());
-            } finally {
-                EstadoHuellas();
-                // Comprueba si la plantilla se ha creado.
-                switch (Reclutador.getTemplateStatus()) {
-                    case TEMPLATE_STATUS_READY:	// informe de éxito y detiene  la captura de huellas
-                        stop();
-                        setTemplate(Reclutador.getTemplate());
-                        EnviarTexto("La Plantilla de la Huella ha Sido Creada, ya puede Verificarla o Identificarla");
-                        guardarHuella();
-                        EstadoHuellas();
-//                        btnGuardar.setEnabled(true);
-//                        btnGuardar.grabFocus();
-                        break;
-                    case TEMPLATE_STATUS_FAILED: // informe de fallas y reiniciar la captura de huellas
-                        Reclutador.clear();
-                        stop();
-                        EstadoHuellas();
-                        setTemplate(null);
-                        JOptionPane.showMessageDialog(this, "La Plantilla de la Huella no pudo ser creada, Repita el Proceso", "Inscripcion de Huellas Dactilares", JOptionPane.ERROR_MESSAGE);
-                        start();
-                        break;
-                }
-            }
-        }
-//        } else {
-//            JOptionPane.showMessageDialog(null, "El usuario con número de documento: " + id + " no se encuentra registrado");
-//        }
-
-    }
-    //Fin metodo procesar captura
-
     //Inicio metodo extraer caracteristicas huella
     public DPFPFeatureSet extraerCaracteristicas(DPFPSample sample, DPFPDataPurpose purpose) {
         DPFPFeatureExtraction extractor = DPFPGlobal.getFeatureExtractionFactory().createFeatureExtraction();
@@ -699,23 +2164,17 @@ public final class principal extends javax.swing.JFrame {
 
     //inicio metodo dibujar huella en el label
     public void DibujarHuella(Image image) {
-        lblImagenHuella.setIcon(new ImageIcon(
-                image.getScaledInstance(lblImagenHuella.getWidth(), lblImagenHuella.getHeight(), Image.SCALE_DEFAULT)));
+
+        lblImagenHuella1.setIcon(new ImageIcon(
+                image.getScaledInstance(lblImagenHuella1.getWidth(), lblImagenHuella1.getHeight(), Image.SCALE_DEFAULT)));
+
         repaint();
     }
         //Fin metodo dibujar huella en el label
 
     //inicio metodos abstractos
-    public void EstadoHuellas() {
-        EnviarTexto2("Muestra restantes Necesarias para Guardar Template " + Reclutador.getFeaturesNeeded());
-    }
-
     public void EnviarTexto(String string) {
-        txtArea.append(string + "\n");
-    }
-
-    public void EnviarTexto2(String string) {
-        lblEstadohuellas.setText(string);
+        txtArea1.append(string + "\n");
     }
 
     public void start() {
@@ -739,70 +2198,498 @@ public final class principal extends javax.swing.JFrame {
     }
 
     //Fin metodos abstractos
-    public void guardarHuella() throws InterruptedException {
-//        String id = txtId.getText();
-        try {
-            ByteArrayInputStream datosHuella = new ByteArrayInputStream(template.serialize());
-            Integer tamañoHuella = template.serialize().length;
-            String opc = HuellaDedos.getSelection().getActionCommand();
-            String sql = "";
-            String dedo = "";
-            switch (opc) {
-                case "1":
-                    sql = "INSERT INTO huellas (huella) VALUES (?)";
-
-                    break;
-                case "2":
-                    sql = "UPDATE tercero SET indice_i = ? WHERE (numero_documento = ?)";
-                    dedo = "Indice Izquierdo guardado";
-                    break;
-            }
-
-            try ( //establece la conexion con la BD
-                    PreparedStatement guardarStmt = cn.prepareStatement(sql)) {
-                guardarStmt.setBinaryStream(1, datosHuella, tamañoHuella);
-
-                //Ejecuta la sentencia
-                guardarStmt.execute();
-//                opcIndice2.setSelected(true);
-//                opcIndice.setSelected(false);
-            }
-            lblImagenHuella.setVisible(true);
-            jLabel1.setVisible(false);
-            cc.desconectar();
-            Reclutador.clear();//limpia el reclutador
-            lblImagenHuella.setIcon(new ImageIcon(getClass().getResource("/Imagenes/fingerPrint.png")));//pone la lbl en blanco
-            stop();
-
-        } catch (SQLException ex) {
-            //Si ocurre un error lo indica en la consola
-            System.err.println("Error al guardar los datos de la huella. " + ex);
-        }
+    private void hideAllComponent() {
+        ocultarPnHome(true);
+        actionOpcModel();
+        cargarModel1();
+        lblIdAdministrator.setVisible(false);
+        opciones();
+        ocultarPnConfig(false);
+        ocultarPnAdministrar(false);
+        ocultarPnAdmin(false);
+        ocultarPnVerificarPatient(false);
+        ocultarPnConfSofware(false);
+        ocultarPnConfigSystemUsers(false);
+        estados();
+        actionAdminOrRoot();
+        ocultarMenus();
+        ocultarPnAddUsers(false);
+        ocultarPnPatient(false);
+        ocultarPnListPatients(false);
+        ocultarPnListPatientsImport(false);
+        ProgresImport.setVisible(false);
+        ocultarLogoSu(false);
+        lblNotfound.setVisible(false);
+        mostrarLblAndText(false);
+        ocultarPnControlPatient(false);
+        lblIdPt.setVisible(false);
+        btnImportPatient.setVisible(false);
+        btnCrearPacientes.setVisible(false);
+        btnListPatients.setVisible(false);
+        btnListControl.setVisible(false);
+        addFinger.setVisible(false);
+        updatePatient.setVisible(false);
+        deletePatient.setVisible(false);
+        ocultarPnlisTUsersRoot(false);
+        ocultarOpcAdmOrRoot(false, false);
+        ocultarBtnVerifyPatients();
     }
 
-    private void ocultarOpcIndices() {
-        opcIndice.setVisible(false);
-        opcIndice2.setVisible(false);
+    private void ocultarPnConfig(boolean b) {
+        pnConfig.setVisible(b);
     }
 
-    private void ocultarPnConfig() {
-        pnConfig.setVisible(false);
+    private void ocultarPnAdministrar(boolean b) {
+        pnAdministrar.setVisible(b);
     }
 
-    private void ocultarPnEnroll() {
-        pnContentEnroll.setVisible(false);
+    private void ocultarPnAdmin(boolean visible) {
+        pnAdmin.setVisible(visible);
     }
 
-    private void ocultarPnAdministrar() {
-        pnAdministrar.setVisible(false);
+    private void ocultarPnConfSofware(boolean hideShow) {
+        pnConfigSoftware.setVisible(hideShow);
     }
 
-    private void ocultarPnAdmin() {
-        pnAdmin.setVisible(false);
+    private void ocultarPnConfigSystemUsers(boolean hideShow) {
+        pnAddUser.setVisible(hideShow);
     }
 
     private void limpiarLogin() {
         txtUser.setText("");
         txtpassword.setText("");
     }
+
+    public void opciones() {
+        opcModel1.addItemListener((ItemEvent e) -> {
+            if (opcModel1.isSelected()) {
+                cboTipoAtencion.removeAllItems();
+                cboTipoAtencion.addItem("Seleccione");
+                cboTipoAtencion.addItem("Admisión");
+                cboTipoAtencion.addItem("Dispensación");
+            }
+        });
+
+        opcModel2.addItemListener((ItemEvent e) -> {
+            if (opcModel2.isSelected()) {
+                cboTipoAtencion.removeAllItems();
+                cboTipoAtencion.addItem("Seleccione");
+                cboTipoAtencion.addItem("Admisión");
+                cboTipoAtencion.addItem("Medico");
+                cboTipoAtencion.addItem("Infusión");
+            }
+        });
+    }
+
+    private void clearFormConfigSoftware() {
+        cboTipoAtencion.setSelectedItem("Seleccione");
+    }
+
+    public void estados() {
+        chkCrear.addItemListener((ItemEvent e) -> {
+            if (chkCrear.isSelected()) {
+                permisos.add("1");
+            } else {
+                permisos.remove("1");
+            }
+        });
+        chkListar.addItemListener((ItemEvent e) -> {
+            if (chkListar.isSelected()) {
+                permisos.add("2");
+            } else {
+                permisos.remove("2");
+
+            }
+        });
+        chkEliminar.addItemListener((ItemEvent e) -> {
+            if (chkEliminar.isSelected()) {
+                permisos.add("3");
+            } else {
+                permisos.remove("3");
+            }
+        });
+
+        chkAdmin.addItemListener((ItemEvent e) -> {
+            if (chkAdmin.isSelected()) {
+                permisos.add("4");
+                permisos.add("5");
+                chkCrear.setSelected(false);
+                chkListar.setSelected(false);
+                chkEliminar.setSelected(false);
+            } else {
+                permisos.remove("4");
+                permisos.remove("5");
+            }
+        });
+    }
+
+    private void limpiarFormAddUsers() {
+        txtNombreUserSystem.setText("");
+        txtPassUserSystem.setText("");
+        txtUserSystem.setText("");
+        txtDocumentCreatedUser.setText("");
+        chkCrear.setSelected(false);
+        chkListar.setSelected(false);
+        chkEliminar.setSelected(false);
+        chkAdmin.setSelected(false);
+        lblIdAdministrator.setText("");
+    }
+
+    private void limpiarFormPatient() {
+        cboTipoIdPatient.setSelectedItem("Seleccione");
+        txtIdPatient.setText("");
+        txtNomPattient.setText("");
+        txtApePat.setText("");
+        lblIdPt.setText("");
+    }
+
+    private void ocultarPnHome(boolean visible) {
+        pnHome.setVisible(visible);
+
+    }
+
+    private void ocultarPnAddUsers(boolean visible) {
+       pnAddUser.setVisible(visible);        
+    }
+
+    private void ocultarPnPatient(boolean visible) {
+        pnAddPatient.setVisible(visible);
+    }
+
+    private void cargarPatients(String dato) {
+        Patietns ap = new Patietns();
+        DefaultTableModel modelo = ap.cargarPatients(dato);
+        tbPatients.setModel(modelo);
+        tbPatients.getColumnModel().getColumn(0).setPreferredWidth(55);
+        tbPatients.getColumnModel().getColumn(1).setPreferredWidth(80);
+        tbPatients.getColumnModel().getColumn(2).setPreferredWidth(80);
+        tbPatients.getColumnModel().getColumn(3).setPreferredWidth(80);
+        TableRowSorter<TableModel> ordenar = new TableRowSorter<>(modelo);
+        tbPatients.setRowSorter(ordenar);
+        this.tbPatients.setModel(modelo);
+    }
+
+    private void cargarControlPatients(String dato, String model) {
+        Patietns ap = new Patietns();
+        DefaultTableModel modelo = ap.cargarControlPatients(dato, model);
+        tbControlPatienst.setModel(modelo);
+        tbControlPatienst.getColumnModel().getColumn(0).setPreferredWidth(55);
+        tbControlPatienst.getColumnModel().getColumn(1).setPreferredWidth(80);
+        tbControlPatienst.getColumnModel().getColumn(2).setPreferredWidth(80);
+        tbControlPatienst.getColumnModel().getColumn(3).setPreferredWidth(80);
+        tbControlPatienst.getColumnModel().getColumn(4).setPreferredWidth(80);
+        tbControlPatienst.getColumnModel().getColumn(5).setPreferredWidth(80);
+        if (model.equals("2")) {
+            tbControlPatienst.getColumnModel().getColumn(6).setPreferredWidth(80);
+        }
+        TableRowSorter<TableModel> ordenar = new TableRowSorter<>(modelo);
+        tbControlPatienst.setRowSorter(ordenar);
+        this.tbControlPatienst.setModel(modelo);
+    }
+
+    private void ocultarPnListPatients(boolean visible) {
+        pnListPatient.setVisible(visible);
+    }
+
+    public void ocultarPnListPatientsImport(boolean visible) {
+        pnListPatientImport.setVisible(visible);
+    }
+
+    public void addFilter() {
+        FileChooser.setFileFilter(new FileNameExtensionFilter("Excel (*.xls)", "xls"));
+        FileChooser.setFileFilter(new FileNameExtensionFilter("Excel (*.xlsx)", "xlsx"));
+    }
+
+    private void ocultarPnVerificarPatient(boolean b) {
+        pnVerificarPatients.setVisible(b);
+    }
+
+    protected void process(DPFPSample sample) {
+        SimpleDateFormat Año = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar calendario = Calendar.getInstance();
+        String FchaHoy = Año.format(m);
+        int hora, minutos, segundos;
+        hora = calendario.get(Calendar.HOUR_OF_DAY);
+        minutos = calendario.get(Calendar.MINUTE);
+        segundos = calendario.get(Calendar.SECOND);
+//        String Fechacompleta = FchaHoy + " " + hora + ":" + minutos + ":" + segundos;
+        String Horacomp = hora + ":" + minutos + ":" + segundos;
+//
+//        // Process the sample and create a feature set for the enrollment purpose.
+        DPFPFeatureSet features = extractFeatures(sample, DPFPDataPurpose.DATA_PURPOSE_VERIFICATION);
+        DPFPTemplate tHuePri = DPFPGlobal.getTemplateFactory().createTemplate();
+        DPFPTemplate tHueSec = DPFPGlobal.getTemplateFactory().createTemplate();
+        byte[] templateBuffer;
+//        // Check quality of the sample and start verification if it's good
+
+        try {
+            String sbQuery = "SELECT id_paciente, tipo_identificacion, "
+                    + "	identificacion, nombre, apellidos, indice_d, indice_i"
+                    + "  FROM pacientes  WHERE "
+                    + "indice_d IS NOT NULL AND indice_i IS NOT NULL";
+            PreparedStatement identificarStmt = cn.prepareStatement(sbQuery);
+            ResultSet rsHuellas = identificarStmt.executeQuery();
+            while (rsHuellas.next()) {
+                templateBuffer = rsHuellas.getBytes("indice_d");
+                tHuePri.deserialize(templateBuffer);
+//                System.out.println(templateBuffer);
+                templateBuffer = rsHuellas.getBytes("indice_i");
+                tHueSec.deserialize(templateBuffer);
+                int id = rsHuellas.getInt("id_paciente");
+                String tipo_id = rsHuellas.getString("tipo_identificacion");
+                String identificacion = rsHuellas.getString("identificacion");
+                String nombre = rsHuellas.getString("nombre");
+                String apellido = rsHuellas.getString("apellidos");
+//                 Check quality of the sample and start verification if it's good
+                if (features != null) {
+                    Image image = CrearImagenHuella(sample);
+                    DibujarHuella(image);
+                    // Compare the feature set with our template
+                    DPFPVerificationResult resultHuePri = Verificador.verify(features, tHuePri);
+                    DPFPVerificationResult resultHueSec = Verificador.verify(features, tHueSec);
+                    if (resultHuePri.isVerified() || resultHueSec.isVerified()) {
+                        int opc = 0;
+                        if (txtVerifyDocument.isVisible()) {
+                            opc = 1;
+                        }
+                        lblNotfound.setVisible(false);
+                        Leer le = new Leer();
+                        String result = "";
+                        String consulta = "SELECT tipo_atencion, modelo FROM config_software where id_software ='" + le.leer() + "'";
+                        PreparedStatement consultaVisitad2 = cn.prepareStatement(consulta);
+                        ResultSet rsconfig = consultaVisitad2.executeQuery();
+                        switch (opc) {
+                            case 1:
+                                if (!txtVerifyDocument.getText().equals("")) {
+                                    if (txtVerifyDocument.getText().equals(identificacion)) {
+                                        if (rsconfig.next()) {
+                                            String tipo_atencion = rsconfig.getString("tipo_atencion");
+                                            int modelo = rsconfig.getInt("modelo");
+                                            ControlPatients cp = new ControlPatients(id, FchaHoy, Horacomp, tipo_atencion, modelo);
+                                            result = cp.createControl();
+                                        }
+                                        if (result.equals("1") || result.equals("2")) {
+                                            lblDocument.setText(tipo_id + " " + identificacion);
+                                            lblNombres.setText(nombre);
+                                            lblApellidos.setText(apellido);
+                                        }
+                                        if (result.equals("1")) {
+                                            lblNotfound.setVisible(true);
+                                            lblNotfound.setText("Usted ya ha sido verificado");
+                                        }
+                                    } else {
+                                        lblNotfound.setVisible(false);
+                                        JOptionPane.showMessageDialog(null, "El paciente no corresponde");
+                                        lblDocument.setText("");
+                                        lblNombres.setText("");
+                                        lblApellidos.setText("");
+                                    }
+                                }
+                                break;
+                            case 0:
+                                if (rsconfig.next()) {
+                                    String tipo_atencion = rsconfig.getString("tipo_atencion");
+                                    int modelo = rsconfig.getInt("modelo");
+                                    ControlPatients cp = new ControlPatients(id, FchaHoy, Horacomp, tipo_atencion, modelo);
+                                    result = cp.createControl();
+                                }
+                                if (result.equals("1") || result.equals("2")) {
+                                    lblDocument.setText(tipo_id + " " + identificacion);
+                                    lblNombres.setText(nombre);
+                                    lblApellidos.setText(apellido);
+                                }
+                                if (result.equals("1")) {
+                                    lblNotfound.setVisible(true);
+                                    lblNotfound.setText("Usted ya ha sido verificado");
+                                }
+                                break;
+                        }
+                        return;
+                    } else {
+                        lblNotfound.setVisible(true);
+                        lblNotfound.setText("El Paciente no esta en la base de datos..");
+                        lblDocument.setText("");
+                        lblNombres.setText("");
+                        lblApellidos.setText("");
+                    }
+                }
+            }
+        } catch (HeadlessException | IllegalArgumentException | SQLException ex) {
+            System.err.println("SQLException (Verificación): " + ex.getMessage());
+            cc.desconectar();
+        }
+    }
+
+    protected DPFPFeatureSet extractFeatures(DPFPSample sample, DPFPDataPurpose purpose) {
+        DPFPFeatureExtraction extractor
+                = DPFPGlobal.getFeatureExtractionFactory().createFeatureExtraction();
+        try {
+            return extractor.createFeatureSet(sample, purpose);
+        } catch (DPFPImageQualityException e) {
+            return null;
+        }
+    }
+
+    private void ocultarMenus() {
+        btnUsers.setVisible(false);
+        btnSalir.setVisible(false);
+        btnConfig.setVisible(true);
+        btnRoot.setVisible(false);
+    }
+
+    private void ocultarLogoSu(boolean b) {
+        pnLogoSU.setVisible(b);
+    }
+
+    private void limpiarpnVerify() {
+        lblDocument.setText("");
+        lblNombres.setText("");
+        lblApellidos.setText("");
+        lblNotfound.setText("");
+        txtArea1.setText("");
+        lblImagenHuella1.setIcon(null);
+    }
+
+    private void mostrarLblAndText(boolean b) {
+        lblDocument2.setVisible(b);
+        txtVerifyDocument.setVisible(b);
+    }
+
+    private void ocultarPnControlPatient(boolean b) {
+        pnListControl.setVisible(b);
+    }
+
+    private void limpiarFormAdministrar() {
+        txtNombreUserSystem.setText("");
+        txtUserSystem.setText("");
+        txtPassUserSystem.setText("");
+        txtDocumentCreatedUser.setText("");
+        lblIdAdministrator.setText("");
+    }
+
+    private void ocultarPnlisTUsersRoot(boolean b) {
+        pnListUsersRoot.setVisible(b);
+    }
+
+    private void cargarUsersRoot(String dato) {
+        configUsersSystem cu = new configUsersSystem();
+        DefaultTableModel modelo = cu.cargarUsersRoot(dato);
+        tbUsersRoot.setModel(modelo);
+        tbUsersRoot.getColumnModel().getColumn(0).setPreferredWidth(55);
+        tbUsersRoot.getColumnModel().getColumn(1).setPreferredWidth(55);
+        tbUsersRoot.getColumnModel().getColumn(2).setPreferredWidth(80);
+        TableRowSorter<TableModel> ordenar = new TableRowSorter<>(modelo);
+        tbUsersRoot.setRowSorter(ordenar);
+        this.tbUsersRoot.setModel(modelo);
+    }
+
+    public void ocultarOpcAdmOrRoot(boolean adm, boolean root) {
+        opcAdmin.setVisible(adm);
+        opcRoot.setVisible(root);
+
+    }
+
+    public void actionAdminOrRoot() {
+        opcAdmin.addItemListener((ItemEvent e) -> {
+            if (opcAdmin.isSelected()) {
+                btnUsers.setVisible(true);
+                btnRoot.setVisible(false);
+                btnImportPatient.setVisible(true);
+                btnCrearPacientes.setVisible(true);
+                btnListPatients.setVisible(true);
+                btnListControl.setVisible(true);
+                deletePatient.setVisible(true);
+                addFinger.setVisible(true);
+                pnAdministrar.setVisible(false);
+                pnAdmin.setVisible(true);
+                ocultarLogoSu(false);
+                ocultarPnAddUsers(false);
+                ocultarPnPatient(false);
+                pnLogoUsers.setVisible(false);
+                pnLogoPatients.setVisible(false);
+                ocultarPnListPatients(false);
+                ocultarPnControlPatient(false);
+                ocultarPnConfSofware(false);
+                ocultarPnConfigSystemUsers(false);
+                ocultarLogoSu(false);
+                ocultarPnlisTUsersRoot(false);
+
+                pnLogoUsers.setVisible(true);
+            } else {
+                btnUsers.setVisible(false);
+                btnRoot.setVisible(true);
+
+            }
+        });
+        opcRoot.addItemListener((ItemEvent e) -> {
+            if (opcRoot.isSelected()) {
+                btnRoot.setVisible(true);
+                btnUsers.setVisible(false);
+                pnAdministrar.setVisible(true);
+                pnAdmin.setVisible(false);
+                ocultarPnConfSofware(false);
+                ocultarPnConfigSystemUsers(false);
+                ocultarLogoSu(false);
+                ocultarPnlisTUsersRoot(false);
+                ocultarLogoSu(true);
+                pnLogoUsers.setVisible(false);
+                ocultarPnAddUsers(false);
+                ocultarPnPatient(false);
+                pnLogoUsers.setVisible(false);
+                pnLogoPatients.setVisible(false);
+                ocultarPnListPatients(false);
+                ocultarPnControlPatient(false);
+
+            } else {
+                btnRoot.setVisible(false);
+                btnUsers.setVisible(true);
+            }
+        });
+    }
+
+    public void actionOpcModel() {
+        opcm1.addItemListener((ItemEvent e) -> {
+            if (opcm1.isSelected()) {
+                cargarControlPatients("", "1");
+                ocultarPnControlPatient(true);
+                ocultarPnPatient(false);
+                ocultarPnListPatients(false);
+                ocultarPnListPatientsImport(false);
+                pnLogoPatients.setVisible(false);
+                ocultarPnVerificarPatient(false);
+                ocultarPnAddUsers(false);
+                ocultarPnAdmin(true);
+            }
+        });
+        opcm2.addItemListener((ItemEvent e) -> {
+            if (opcm2.isSelected()) {
+                cargarControlPatients("", "2");
+                ocultarPnControlPatient(true);
+                ocultarPnPatient(false);
+                ocultarPnListPatients(false);
+                ocultarPnListPatientsImport(false);
+                pnLogoPatients.setVisible(false);
+                ocultarPnVerificarPatient(false);
+                ocultarPnAddUsers(false);
+                ocultarPnAdmin(true);
+            }
+        });
+    }
+
+    private void ocultarBtnVerifyPatients() {
+        Leer le = new Leer();
+        if (le.leer().equals("Error al leer") || le.leer().equals("")) {
+            btnVerificarPatient.setVisible(false);
+        } else {
+            btnVerificarPatient.setVisible(true);
+        }
+    }
+
+    public void cargarModel1() {
+        cboTipoAtencion.removeAllItems();
+        cboTipoAtencion.addItem("Seleccione");
+        cboTipoAtencion.addItem("Admisión");
+        cboTipoAtencion.addItem("Dispensación");
+    }
+
 }

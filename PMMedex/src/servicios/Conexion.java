@@ -6,14 +6,12 @@ import javax.swing.JOptionPane;
 public class Conexion {
 
     Connection conectar = null;
-//    Connection conectar2 = null;
 
     public Connection conexion() {
         try {
             Class.forName("com.mysql.jdbc.Driver");
-//            conectar = DriverManager.getConnection("jdbc:mysql://localhost/almaiz_db", "root", "mauricio");
-            conectar = DriverManager.getConnection("jdbc:mysql://localhost/ip_medex", "root", "mauricio");
-//            JOptionPane.showMessageDialog(null, conectar+"exito");
+            conectar = DriverManager.getConnection("jdbc:mysql://192.99.203.15:3306/pm_medex", "root", "Medex-2015");
+//            conectar = DriverManager.getConnection("jdbc:mysql://www.db4free.net:3306/pm_medex", "mauricio", "openEHR2008");
         } catch (ClassNotFoundException | SQLException e) {
             JOptionPane.showMessageDialog(null, e);
         }
